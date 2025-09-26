@@ -1,0 +1,5 @@
+{% for log in logs %}
+  {% include "_single_notification.html" %}
+{% else %}
+  <p>No activity yet.</p>
+{% endfor %}

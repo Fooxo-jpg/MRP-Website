@@ -1,7 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, session, Response, jsonify, flash
 from pymongo import MongoClient
 from datetime import datetime
+from bson import ObjectId
 import csv
+import time
+import json
 import io
 
 app = Flask(__name__)
@@ -15,6 +18,16 @@ db = client.MRP_Database
 
 BOM_Entries = db.bom_entry
 productCount = db.product
+notifications = db.notifications
+
+def add_notification(title, message, type="info"):
+    notifications.insert_one({
+        "type": type,
+        "title": title,
+        "message": message,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    })
+
 
 def generate_product_code(productName):
     # CHECK IF PRODUCT ALREADY EXISTING (CASE INSENSITIVE)
@@ -129,7 +142,27 @@ def admin():
 def activity():
     if 'user' not in session:
         return redirect(url_for('signin'))
-    return render_template('activity.html')
+    logs = list(notifications.find().sort("_id", -1))
+    return render_template('activity.html', logs=logs)
+
+@app.route('/stream')
+def stream():
+    def event_stream():
+        last_id = None
+        while True:
+            time.sleep(2)  # check every 2s (can be tuned down)
+            
+            query = {}
+            if last_id:
+                query = {"_id": {"$gt": ObjectId(last_id)}}
+            
+            new_logs = list(notifications.find(query).sort("_id", 1))  # oldest first
+            if new_logs:
+                for log in new_logs:
+                    html = render_template('_single_notification.html', log=log)
+                    yield f"data: {json.dumps({'html': html})}\n\n"
+                    last_id = str(log["_id"])
+    return Response(event_stream(), mimetype="text/event-stream")
 
 # BOM SECTION
 @app.route("/BOM", methods=["GET", "POST"])
@@ -296,6 +329,8 @@ def import_csv():
         message = f"Imported {imported_count} items"
         if duplicate_logs:
             message += "\n" + "\n".join(duplicate_logs)
+
+        add_notification("Import BOM", message, "info")
 
         return jsonify({"message": message})
 

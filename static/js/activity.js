@@ -58,5 +58,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // NOTIFICATION AREA
+  const evtSource = new EventSource("/stream");
+
+  evtSource.onmessage = function (event) {
+    const data = JSON.parse(event.data);
+    const container = document.getElementById("notifications-container");
+
+    // Create a temporary element and append parsed HTML
+    const temp = document.createElement("div");
+    temp.innerHTML = data.html;
+    const newNotif = temp.firstElementChild;
+
+    // Insert on top (newest first)
+    container.prepend(newNotif);
+  };
+
 });
 
