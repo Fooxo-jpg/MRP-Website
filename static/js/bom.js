@@ -2,9 +2,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================
   // Sidebar Navigation
   // =========================
-  const toggleButton = document.getElementById('toggle-btn');
-  const sidebar = document.getElementById('sidebar');
-
   window.toggleSidebar = function () {
     const sidebar = document.getElementById('sidebar');
     const toggleButton = document.getElementById('toggle-btn');
