@@ -5,9 +5,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MRP</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/Inventory.css') }}">
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='assets/Chair.svg') }}">
-  <script src="{{ url_for('static', filename='js/bom.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/Inventory.js') }}" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 </head>
 
@@ -43,7 +43,7 @@
         </a>
       </li>
       {% endif %}
-      <li>
+      <li class="active">
         <a href="{{ url_for('Inventory') }}">
           <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
             <path
@@ -52,7 +52,7 @@
           <span>Inventory</span>
         </a>
       </li>
-      <li class="active">
+      <li>
         <a href="{{ url_for('bom') }}">
           <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
             <path
@@ -135,7 +135,7 @@
     <div class="inventory-section">
       <div class="section-header">
         <div class="section-top">
-          <h2>Bill of Materials</h2>
+          <h2>Inventory</h2>
           <button class="create-btn" id="openCreateModalBtn"><svg xmlns="http://www.w3.org/2000/svg" height="24px"
               viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
               <path
@@ -154,11 +154,6 @@
                 <path
                   d="M360-440h240q17 0 28.5-11.5T640-480q0-17-11.5-28.5T600-520H360q-17 0-28.5 11.5T320-480q0 17 11.5 28.5T360-440Zm0 120h240q17 0 28.5-11.5T640-360q0-17-11.5-28.5T600-400H360q-17 0-28.5 11.5T320-360q0 17 11.5 28.5T360-320Zm0 120h120q17 0 28.5-11.5T520-240q0-17-11.5-28.5T480-280H360q-17 0-28.5 11.5T320-240q0 17 11.5 28.5T360-200ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h287q16 0 30.5 6t25.5 17l194 194q11 11 17 25.5t6 30.5v447q0 33-23.5 56.5T720-80H240Zm480-520H580q-25 0-42.5-17.5T520-660v-140H240v640h480v-440ZM240-800v200-200 640-640Z" />
               </svg>CSV</button>
-            <button class="secondary-btn" id="importBtn"><svg xmlns="http://www.w3.org/2000/svg" height="24px"
-                viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
-                <path
-                  d="M240-160q-33 0-56.5-23.5T160-240v-80q0-17 11.5-28.5T200-360q17 0 28.5 11.5T240-320v80h480v-80q0-17 11.5-28.5T760-360q17 0 28.5 11.5T800-320v80q0 33-23.5 56.5T720-160H240Zm200-486-75 75q-12 12-28.5 11.5T308-572q-11-12-11.5-28t11.5-28l144-144q6-6 13-8.5t15-2.5q8 0 15 2.5t13 8.5l144 144q12 12 11.5 28T652-572q-12 12-28.5 12.5T595-571l-75-75v286q0 17-11.5 28.5T480-320q-17 0-28.5-11.5T440-360v-286Z" />
-              </svg>Import from CSV</button>
           </div>
           <div class="filter-container">
             <button class="filter-btn" id="filterToggle">
@@ -172,16 +167,17 @@
             <!-- hidden dropdown that expands left -->
             <div class="filter-dropdown" id="filterMenu">
               <select id="filterColumn">
-                <option value="0">Product Code</option>
-                <option value="1">Product Name</option>
-                <option value="2">BOM Level</option>
-                <option value="3">Item Code</option>
-                <option value="4">Item Name</option>
-                <option value="5">Qty per Unit</option>
-                <option value="6">UOM</option>
-                <option value="7">Supplier</option>
-                <option value="8">Lead Time</option>
-                <option value="9">Cost/Unit</option>
+                <option value="0">ITEM CODE</option>
+                <option value="1">ITEM NAME</option>
+                <option value="2">CATEGORY</option>
+                <option value="3">UOM</option>
+                <option value="4">CURRENT STOCK</option>
+                <option value="5">REORDER LEVEL</option>
+                <option value="6">REORDER QTY</option>
+                <option value="7">COST/UNIT</option>
+                <option value="8">TOTAL VALUE</option>
+                <option value="9">SUPPLIER</option>
+                <option value="10">LEAD TIME</option>
               </select>
 
               <select id="filterOrder">
@@ -198,20 +194,22 @@
         <table class="inventory-table">
           <thead>
             <tr>
-              <th>PRODUCT CODE</th>
-              <th>PRODUCT NAME</th>
-              <th>BOM LEVEL</th>
               <th>ITEM CODE</th>
               <th>ITEM NAME</th>
-              <th>QTY PER UNIT</th>
+              <th>CATEGORY</th>
               <th>UOM</th>
+              <th>CURRENT STOCK</th>
+              <th>REORDER LEVEL</th>
+              <th>REORDER QTY</th>
+              <th>COST/UNIT</th>
+              <th>TOTAL VALUE</th>
               <th>SUPPLIER</th>
               <th>LEAD TIME</th>
-              <th>COST/UNIT</th>
               <th></th>
             </tr>
             <!-- Filter row -->
             <tr id="filter-row">
+              <td><input type="text" placeholder=""></td>
               <td><input type="text" placeholder=""></td>
               <td><input type="text" placeholder=""></td>
               <td><input type="text" placeholder=""></td>
@@ -240,24 +238,25 @@
             <input type="hidden" id="hasData" value="{{ 'true' if has_data else 'false' }}">
             {% for entry in entries %}
             <tr>
-              <td>{{ entry.productCode }}</td>
-              <td>{{ entry.productName }}</td>
-              <td>{{ entry.bomLevel }}</td>
               <td>{{ entry.itemCode }}</td>
               <td>{{ entry.itemName }}</td>
-              <td>{{ entry.qtyPerUnit }}</td>
+              <td>{{ entry.category }}</td>
               <td>{{ entry.uom }}</td>
+              <td>{{ entry.currentStock }}</td>
+              <td>{{ entry.reorderLevel }}</td>
+              <td>{{ entry.reorderQty }}</td>
+              <td>$ {{ entry.costPerUnit }}</td>
+              <td>$ {{ entry.totalValue }}</td>
               <td>{{ entry.supplier }}</td>
               <td>{{ entry.leadTime }} Days</td>
-              <td>$ {{ entry.costPerUnit }}</td>
               <td>
-                <button class="icon-btn"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
-                    width="24px" fill="#e3e3e3">
+                <button class="icon-btn editItemBtn"><svg xmlns="http://www.w3.org/2000/svg" height="24px"
+                    viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
                     <path
                       d="M200-200h57l391-391-57-57-391 391v57Zm-40 80q-17 0-28.5-11.5T120-160v-97q0-16 6-30.5t17-25.5l505-504q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L313-143q-11 11-25.5 17t-30.5 6h-97Zm600-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" />
                   </svg></button>
-                <button class="icon-btn"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
-                    width="24px" fill="#e3e3e3">
+                <button class="icon-btn" id="itemAnalytics"><svg xmlns="http://www.w3.org/2000/svg" height="24px"
+                    viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
                     <path
                       d="M320-480q-17 0-28.5 11.5T280-440v120q0 17 11.5 28.5T320-280q17 0 28.5-11.5T360-320v-120q0-17-11.5-28.5T320-480Zm320-200q-17 0-28.5 11.5T600-640v320q0 17 11.5 28.5T640-280q17 0 28.5-11.5T680-320v-320q0-17-11.5-28.5T640-680ZM480-400q-17 0-28.5 11.5T440-360v40q0 17 11.5 28.5T480-280q17 0 28.5-11.5T520-320v-40q0-17-11.5-28.5T480-400ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Zm280 280q17 0 28.5-11.5T520-520q0-17-11.5-28.5T480-560q-17 0-28.5 11.5T440-520q0 17 11.5 28.5T480-480Z" />
                   </svg></button>
@@ -274,26 +273,29 @@
   <div id="createModal" class="createmodal">
     <div class="createmodal-content">
       <span class="createmodal-close">&times;</span>
-      <h2>Create New BOM Item</h2>
-      <form id="createForm" method="POST" action="/BOM">
+      <h2>New Item</h2>
+      <form id="createForm" method="POST" action="/Inventory">
         <div class="form-group">
-          <label for="productName">Product Name</label>
-          <input type="text" id="productName" name="productName" placeholder="Enter Product Name" required maxlength="50">
+          <label for="productName">Item Name</label>
+          <input type="text" id="itemName" name="itemName" placeholder="Enter Item Name" required maxlength="50">
         </div>
 
         <div class="form-group">
-          <label for="bomLevel">BOM Level</label>
-          <input type="number" id="bomLevel" name="bomLevel" min="1" required>
+          <label for="supplier">Supplier</label>
+          <input type="text" id="supplier" name="supplier" placeholder="Enter  Supplier" required>
         </div>
 
         <div class="form-group">
-          <label for="itemName">Item Name</label>
-          <input type="text" id="itemName" name="itemName" required maxlength="50">
-        </div>
-
-        <div class="form-group">
-          <label for="qtyPerUnit">Qty per Unit</label>
-          <input type="number" id="qtyPerUnit" name="qtyPerUnit" min="0.1" step="0.1" required>
+          <label for="category">Category</label>
+          <select id="category" name="category" required>
+            <option value="">Select Category</option>
+            <option value="rawMaterials">Raw Materials</option>
+            <option value="components">Components</option>
+            <option value="subAssembly">Sub-Assembly</option>
+            <option value="packaging">Packaging</option>
+            <option value="consumables">Consumables</option>
+            <option value="spareParts">Spare Parts</option>
+          </select>
         </div>
 
         <div class="form-group">
@@ -310,30 +312,43 @@
         </div>
 
         <div class="form-group">
-          <label for="supplier">Supplier</label>
-          <input type="text" id="supplier" name="supplier" required maxlength="50">
+          <label for="currentStock">Current Stock</label>
+          <input type="number" id="currentStock" name="currentStock" min="1" step="1" placeholder="Enter Current Stock"
+            required>
         </div>
 
         <div class="form-group">
-          <label for="leadTime">Lead Time (days)</label>
-          <input type="number" id="leadTime" name="leadTime" min="1" required>
+          <label for="reorderLevel">Reorder Level</label>
+          <input type="number" id="reorderLevel" name="reorderLevel" min="1" step="1" placeholder="Enter Reorder Level"
+            required>
+        </div>
+
+        <div class="form-group">
+          <label for="reorderQty">Reorder Qty</label>
+          <input type="number" id="reorderQty" name="reorderQty" min="1" step="1" placeholder="Enter Reorder Quantity"
+            required>
         </div>
 
         <div class="form-group">
           <label for="cost">Cost/Unit</label>
           <div class="input-with-symbol">
             <span class="currency">$</span>
-            <input type="number" id="cost" name="costPerUnit" step="0.01" required max="999999">
+            <input type="number" id="cost" name="costPerUnit" step="0.01" required max="999999"
+              placeholder="Enter Cost Per Unit" required>
           </div>
         </div>
+
+        <div class="form-group">
+          <label for="leadTime">Lead Time (Days)</label>
+          <input type="number" id="leadTime" name="leadTime" min="1" placeholder="Enter Lead Time" required>
+        </div>
+
         <button type="submit" class="create-btn">Save</button>
       </form>
     </div>
   </div>
-
   <!--IMPORT FROM CSV-->
   <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
-
   <!-- IMPORT MODAL -->
   <div id="importModal" class="importModal">
     <div class="importModal-content">
@@ -344,6 +359,105 @@
         <button id="keepImport">Keep</button>
         <button id="deleteImport">Delete</button>
       </div>
+    </div>
+  </div>
+  <!-- Edit Inventory Item Modal -->
+  <div id="edit_InventoryItemModal" class="modal">
+    <div class="modal-content">
+      <h2>Edit Inventory Item</h2>
+
+      <!-- Item Info Form -->
+      <form id="editItemForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="itemName">Item Name:</label>
+            <input type="text" id="edit_itemName" name="itemName" value="XXXXXXXXXX">
+          </div>
+
+          <div class="form-group">
+            <label for="itemCode">Item Code:</label>
+            <input type="text" id="edit_itemCode" name="itemCode" value="XX-000">
+          </div>
+
+          <div class="form-group">
+            <label for="category">Category:</label>
+            <input type="text" id="edit_category" name="category" value="XXXXXXXXXX">
+          </div>
+
+          <div class="form-group">
+            <label for="uom">UOM:</label>
+            <input type="text" id="edit_uom" name="uom" value="kg">
+          </div>
+
+          <div class="form-group">
+            <label for="currentStock">Current Stock:</label>
+            <input type="number" id="edit_currentStock" name="currentStock" value="00">
+          </div>
+
+          <div class="form-group">
+            <label for="reorderLevel">Reorder Level:</label>
+            <input type="number" id="edit_reorderLevel" name="reorderLevel" value="00">
+          </div>
+
+          <div class="form-group">
+            <label for="reorderQty">Reorder Quantity:</label>
+            <input type="number" id="edit_reorderQty" name="reorderQty" value="00">
+          </div>
+
+          <div class="form-group">
+            <label for="costPerUnit">Cost Per Unit:</label>
+            <input type="number" step="0.01" id="edit_costPerUnit" name="costPerUnit" value="00.00">
+          </div>
+
+          <div class="form-group">
+            <label for="totalValue">Total Value:</label>
+            <input type="number" step="0.01" id="edit_totalValue" name="totalValue" value="00000.00" readonly>
+          </div>
+
+          <div class="form-group">
+            <label for="supplier">Supplier:</label>
+            <input type="text" id="edit_supplier" name="supplier" value="XXXXX">
+          </div>
+
+          <div class="form-group">
+            <label for="leadTime">Lead Time (days):</label>
+            <input type="number" id="edit_leadTime" name="leadTime" value="0">
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- Used In Table -->
+        <h3>USED IN:</h3>
+        <table id="usedInTable">
+          <thead>
+            <tr>
+              <th>Product Code</th>
+              <th>Product Name</th>
+              <th>Quantity Used</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Rows dynamically filled with JS -->
+            <tr>
+              <td>PR-001</td>
+              <td>Product A</td>
+              <td>10</td>
+            </tr>
+            <tr>
+              <td>PR-002</td>
+              <td>Product B</td>
+              <td>5</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Buttons -->
+        <div class="modal-buttons">
+          <button type="button" onclick="closeModal('edit_InventoryItemModal')">Cancel</button>
+          <button type="submit">Save</button>
+        </div>
+      </form>
     </div>
   </div>
 

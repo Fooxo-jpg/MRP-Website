@@ -43,7 +43,7 @@
       </li>
       {% endif %}
       <li>
-        <a href="Inventory.html">
+        <a href="{{ url_for('Inventory') }}">
           <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
             <path
               d="m620-275 198-198q11-11 28-11t28 11q11 11 11 28t-11 28L648-191q-12 12-28 12t-28-12L478-305q-11-11-11-28t11-28q11-11 28-11t28 11l86 86ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h167q11-35 43-57.5t70-22.5q40 0 71.5 22.5T594-840h166q33 0 56.5 23.5T840-760v160q0 17-11.5 28.5T800-560q-17 0-28.5-11.5T760-600v-160h-80v80q0 17-11.5 28.5T640-640H320q-17 0-28.5-11.5T280-680v-80h-80v560h200q17 0 28.5 11.5T440-160q0 17-11.5 28.5T400-120H200Zm280-640q17 0 28.5-11.5T520-800q0-17-11.5-28.5T480-840q-17 0-28.5 11.5T440-800q0 17 11.5 28.5T480-760Z" />
@@ -103,10 +103,6 @@
     <div class="topbar">
       <h1>CSS100</h1>
       <div class="topbar-actions">
-        <button class="topbar-icon-btn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="#e3e3e3">
-            <path
-              d="M200-200q-17 0-28.5-11.5T160-240q0-17 11.5-28.5T200-280h40v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h40q17 0 28.5 11.5T800-240q0 17-11.5 28.5T760-200H200Zm280-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z" />
-          </svg></button>
         <button class="topbar-icon-btn" id="profileButton"><svg xmlns="http://www.w3.org/2000/svg"
             viewBox="0 -960 960 960" fill="#e3e3e3">
             <path
@@ -114,14 +110,12 @@
           </svg></button>
 
         <div class="profile-container">
-          <!-- Dropdown -->
           <div id="profileMenu" class="profile-menu">
             <div class="profile-header">
               <p class="profile-name">{{ session['user'] }}</p>
               <p class="profile-email">{{ session.get('email', 'admin@struktura.co') }}</p>
             </div>
             <hr>
-            <a href="#">Profile & Settings</a>
             <a href="{{ url_for('logout') }}">
               <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"
                 fill="#e3e3e3">
@@ -138,18 +132,7 @@
     <div class="notification-section">
       <div class="notifications-container">
         <div class="notification-header">
-          <h2>Notifications</h2>
-          <div class="notification-actions">
-            <button class="btn" id="markRead">Mark all as read</button>
-            <button class="btn btn-clear" id="clearAll">Clear all</button>
-          </div>
-        </div>
-        <div class="notification-tabs">
-          <button class="tab active">All</button>
-          <button class="tab">Unread</button>
-          <button class="tab">Alerts</button>
-          <button class="tab">Information</button>
-          <button class="tab">Success</button>
+          <h2>Activity Log</h2>
         </div>
         <div class="notification-list">
           {% include "_notifications.html" %}

@@ -17,8 +17,10 @@ client = MongoClient("mongodb+srv://Fooxo:2025174371@mrp-database.qopzsma.mongod
 db = client.MRP_Database
 
 BOM_Entries = db.bom_entry
+Inventory_Entries = db.inventory
 productCount = db.product
 notifications = db.notifications
+user_notifications = db.user_notifications
 
 def add_notification(title, message, type="info"):
     notifications.insert_one({
@@ -28,6 +30,14 @@ def add_notification(title, message, type="info"):
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     })
 
+def calculate_total_value(current_stock, cost_per_unit):
+    try:
+        # Convert inputs to float in case they are strings
+        stock = float(current_stock)
+        cost = float(cost_per_unit)
+        return stock * cost
+    except (ValueError, TypeError):
+        return 0
 
 def generate_product_code(productName):
     # CHECK IF PRODUCT ALREADY EXISTING (CASE INSENSITIVE)
@@ -137,6 +147,97 @@ def admin():
         return redirect(url_for('signin'))
     return render_template('admin.html')
 
+# INVENTORY 
+@app.route('/Inventory', methods=["GET", "POST"])
+def Inventory():
+    if 'user' not in session:
+        return redirect(url_for('signin'))
+
+    if request.method == "POST":
+        itemName = request.form.get("itemName")
+        itemCode = generate_part_id(itemName)
+        category = request.form.get("category")
+        uom = request.form.get("uom")
+        currentStock = request.form.get("currentStock")
+        reorderLvl = request.form.get("reorderLevel")
+        reorderQty = request.form.get("reorderQty")
+        costPerUnit = request.form.get("costPerUnit")
+        totalValue = calculate_total_value(currentStock, costPerUnit)
+        supplier = request.form.get("supplier")
+        leadTime = request.form.get("leadTime")
+
+        #put into mongoDB
+        Inventory_Entries.insert_one({
+            "itemName": itemName,
+            "itemCode": itemCode,
+            "category": category,
+            "uom": uom,
+            "currentStock": currentStock,
+            "reorderLevel": reorderLvl,
+            "reorderQty": reorderQty,
+            "costPerUnit": costPerUnit,
+            "totalValue": totalValue,
+            "supplier": supplier,
+            "leadTime": leadTime,
+        })
+
+        add_notification("New Item Created!", f"{itemName}[{itemCode}]", "success")
+        return redirect(url_for("Inventory"))
+    
+    inventory_entries = list(Inventory_Entries.find().sort("itemCode", 1))
+    return render_template(
+        "Inventory.html",
+        entries=inventory_entries,
+        has_data=Inventory_Entries.count_documents({}) > 0
+    )
+
+@app.route("/export_csv_inv", methods=["POST"])
+def export_csv_inv():
+    # Columns to export (match your HTML)
+    selected_columns = [
+        "ITEM CODE", "ITEM NAME", "CATEGORY", "UOM", "CURRENT STOCK",
+        "REORDER LEVEL", "REORDER QTY", "COST/UNIT", "TOTAL VALUE", "SUPPLIER", "LEAD TIME"
+    ]
+
+    # Map display names to MongoDB field names
+    column_map = {
+        "ITEM CODE": "itemCode",
+        "ITEM NAME": "itemName",
+        "CATEGORY": "category",
+        "UOM": "uom",
+        "CURRENT STOCK": "currentStock",
+        "REORDER LEVEL": "reorderLevel",
+        "REORDER QTY": "reorderQty",
+        "COST/UNIT": "costPerUnit",
+        "TOTAL VALUE": "totalValue",
+        "SUPPLIER": "supplier",
+        "LEAD TIME": "leadTime"
+    }
+
+    # Projection for MongoDB query
+    projection = {v: 1 for v in column_map.values()}
+    projection["_id"] = 0
+
+    inventory_entries = list(Inventory.find({}, projection))
+
+    # Create CSV
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=selected_columns)
+    writer.writeheader()
+
+    for entry in inventory_entries:
+        row = {col: entry.get(column_map[col], "") for col in selected_columns}
+        writer.writerow(row)
+
+    # Generate file name with current date
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    filename = f"inventory_export_{date_str}.csv"
+
+    # Return CSV response
+    response = Response(output.getvalue(), mimetype="text/csv")
+    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    return response
+
 # NOTIFICATION / ACTIVITY LOG SECTION
 @app.route('/activity')
 def activity():
@@ -195,6 +296,8 @@ def bom():
             "leadTime": leadTime,
             "costPerUnit": costPerUnit
         })
+
+        add_notification("New Item Created!", f"{itemName}[{itemCode}] | {productName}[{productCode}]", "success")
 
         return redirect(url_for("bom"))
     

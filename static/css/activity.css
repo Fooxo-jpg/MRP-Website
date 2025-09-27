@@ -324,7 +324,10 @@ main p {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    padding-top:0.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--line-clr);
 }
 
 .notification-header h2 {
@@ -332,49 +335,6 @@ main p {
   font-size: 1.6rem;
   font-weight: 600;
   color: var(--accent-clr);
-}
-
-.notification-actions {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-.btn {
-    padding: 6px 12px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    background: #f7f7f7;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.btn-clear {
-    background: #fff0f0;
-    border: 1px solid #f5b5b5;
-    color: #d33;
-}
-
-.notification-tabs {
-    display: flex;
-    gap: 20px;
-    border-bottom: 1px solid #eee;
-    margin-bottom: 15px;
-}
-
-.tab {
-    padding: 6px 10px;
-    border: none;
-    background: none;
-    cursor: pointer;
-    font-size: 14px;
-    color: #777;
-}
-
-.tab.active {
-    border-bottom: 2px solid var(--accent-clr);
-    color: #333;
-    font-weight: 600;
 }
 
 .notification-list {
@@ -393,37 +353,24 @@ main p {
     border: 1px solid #e6e6e6;
 }
 
-.notification-card.alert {
-    border-left: 4px solid #ff9387;
+.notification-icon svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  fill: currentColor; /* default will inherit from .notification-card color */
 }
 
-.notification-card.info {
-    border-left: 4px solid #74b2db;
-}
+.notification-card.info { --notif-clr: #74b2db; }
+.notification-card.alert, .notification-card.error { --notif-clr: #ff9387;}
+.notification-card.success { --notif-clr: #54b369; }
+.notification-card.warning { --notif-clr: #ecae49; }
 
-.notification-card.success {
-    border-left: 4px solid #54b369;
-}
+.notification-card .notification-icon { color: var(--notif-clr); }
 
-.notification-card.warning {
-    fill: #ecae49;
-}
-
-.notification-card.alert .notification-icon svg {
-    fill: #ff9387;
-}
-
-.notification-card.info .notification-icon svg {
-    fill: #74b2db;
-}
-
-.notification-card.success .notification-icon svg {
-    fill: #54b369;
-}
-
-.notification-card.warning .notification-icon svg {
-    fill: #ecae49; /* example warning color */
-}
+.notification-card.info { border-left: 4px solid var(--notif-clr); }
+.notification-card.success { border-left: 4px solid var(--notif-clr); }
+.notification-card.alert { border-left: 4px solid var(--notif-clr); }
+.notification-card.warning { border-left: 4px solid var(--notif-clr); }
 
 .notification-icon {
     font-size: 20px;
@@ -446,12 +393,4 @@ main p {
     margin-bottom: 10px;
     font-size: 14px;
     color: var(--secondary-text-clr);
-}
-
-.notification-actions-single {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    font-size: 14px;
-    cursor: pointer;
 }
