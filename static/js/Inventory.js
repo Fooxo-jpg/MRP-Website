@@ -38,18 +38,6 @@ document.addEventListener("DOMContentLoaded", () => {
       ul.previousElementSibling.classList.remove('rotate');
     });
   }
-
-  // -------------------------
-  // Filter Toggle (row expand)
-  // -------------------------
-  const filterBtn = document.querySelector(".filter-btn");
-  const filterRow = document.getElementById("filter-row");
-  if (filterBtn && filterRow) {
-    filterBtn.addEventListener("click", () => {
-      filterRow.classList.toggle("show");
-    });
-  }
-
   // -------------------------
   // Create Modal
   // -------------------------
@@ -104,26 +92,28 @@ document.addEventListener("DOMContentLoaded", () => {
       let cmp;
 
       switch (columnIndex) {
-        case 0: // PRODUCT CODE
-        case 2: // BOM LEVEL
-        case 5: //QTY PER UNIT
-        case 8: // LEAD TIME
-        case 9: //COST/UNIT
+        case 4: // CURRENT STOCK
+        case 5: // REORDER LEVEL
+        case 6: // REORDER QTY
+        case 7: // COST/UNIT
+        case 8: // TOTAL VALUE
+        case 10: // LEAD TIME
           const numA = parseFloat(A.replace(/[^0-9.-]+/g, "")) || 0;
           const numB = parseFloat(B.replace(/[^0-9.-]+/g, "")) || 0;
           cmp = numA - numB;
           break;
-        case 3: // ITEM CODE [XX-00]
+        case 0: // ITEM CODE
           const extractNum = (val) => {
             const match = val.match(/-(\d+)$/);
             return match ? parseInt(match[1], 10) : 0;
           };
           cmp = extractNum(A) - extractNum(B);
           break;
-        default: // ALL OTHER COLUMNS
+        default: // All other columns (text)
           cmp = A.localeCompare(B, undefined, { numeric: true, sensitivity: "base" });
           break;
       }
+
 
       return order === "asc" ? cmp : -cmp;
     });
@@ -198,15 +188,56 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  // -------------------------
+  // ITEM ANALYTICS
+  // -------------------------
+  document.querySelectorAll(".itemAnalyticsBtn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const itemCode = btn.dataset.itemcode;
+      const modal = document.getElementById("itemAnalyticsModal");
+      const tbody = document.querySelector("#analyticsTable tbody");
+      tbody.innerHTML = ""; // clear old rows
+
+      try {
+        const response = await fetch(`/item-analytics/${itemCode}`);
+        const data = await response.json();
+
+        if (data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3">No products use this item.</td></tr>`;
+        } else {
+          data.forEach(row => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td>${row.productName}</td><td>${row.qtyPerUnit}</td><td>${row.uom}</td>`;
+            tbody.appendChild(tr);
+          });
+        }
+
+        modal.style.display = "flex"; // show modal
+      } catch (err) {
+        console.error(err);
+        alert("Failed to fetch item usage data.");
+      }
+    });
+  });
+
+  // Close when clicking outside modal
+  window.addEventListener("click", e => {
+    const modal = document.getElementById("itemAnalyticsModal");
+    if (e.target === modal) modal.style.display = "none";
+  });
+
   // -------------------------
   // EDIT INVENTORY ITEM MODAL
   // -------------------------
   const editModal = document.getElementById('edit_InventoryItemModal');
   const cancelBtn = editModal.querySelector('button[type="button"]');
   const saveBtn = editModal.querySelector('button[type="submit"]');
+  const deleteBtn = editModal.querySelector('#deleteItemBtn');
 
   function openEditModal(itemData) {
     // Populate modal fields
+    editModal.querySelector('#edit_itemId').value = itemData._id;
     editModal.querySelector('#edit_itemName').value = itemData.name;
     editModal.querySelector('#edit_itemCode').value = itemData.code;
     editModal.querySelector('#edit_category').value = itemData.category;
@@ -232,13 +263,12 @@ document.addEventListener("DOMContentLoaded", () => {
     editModal.style.display = 'block';
   }
 
-  let currentEditingRow = null;
-
   document.querySelectorAll('.editItemBtn').forEach(btn => {
     btn.addEventListener('click', () => {
       const row = btn.closest('tr');
       currentEditingRow = row;
       const itemData = {
+        _id: row.dataset.id,
         name: row.children[1].innerText,
         code: row.children[0].innerText,
         category: row.children[2].innerText,
@@ -256,14 +286,49 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
 
-  // Close modal function
+  // CLOSE MODAL
   function closeModal() { editModal.style.display = 'none'; }
   cancelBtn.addEventListener('click', closeModal);
 
-  // Save button click
+  // CLOSE MODAL IF CLICKED OUTSIDE
+  window.addEventListener('click', (e) => {
+    if (e.target === editModal) {
+      closeModal();
+    }
+  });
+
+  // DELETE BUTTON
+  deleteBtn.addEventListener('click', async () => {
+    if (!confirm("Are you sure you want to delete this item?")) return;
+
+    const itemId = editModal.querySelector('#edit_itemId').value;
+
+    try {
+      const response = await fetch('/delete-inventory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ _id: itemId })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        alert('Item deleted successfully');
+        closeModal();
+        location.reload();
+      } else {
+        alert('Failed to delete: ' + result.message);
+      }
+    } catch (err) {
+      console.error('Error deleting item:', err);
+      alert('Error deleting item. Check console.');
+    }
+  })
+
+  // SAVE BUTTON
   saveBtn.addEventListener('click', async (e) => {
     e.preventDefault();
     const editedItem = {
+      _id: editModal.querySelector('#edit_itemId').value,
       name: editModal.querySelector('#edit_itemName').value,
       code: editModal.querySelector('#edit_itemCode').value,
       category: editModal.querySelector('#edit_category').value,
@@ -287,37 +352,18 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       const result = await response.json();
+      console.log(result);
 
       if (result.success) {
         alert('Item saved successfully!');
-        if (currentEditingRow) {
-          currentEditingRow.children[0].innerText = editedItem.code;
-          currentEditingRow.children[1].innerText = editedItem.name;
-          currentEditingRow.children[2].innerText = editedItem.category;
-          currentEditingRow.children[3].innerText = editedItem.uom;
-          currentEditingRow.children[4].innerText = editedItem.currentStock;
-          currentEditingRow.children[5].innerText = editedItem.reorderLevel;
-          currentEditingRow.children[6].innerText = editedItem.reorderQty;
-          currentEditingRow.children[7].innerText = `$${editedItem.costPerUnit}`;
-          currentEditingRow.children[8].innerText = `$${editedItem.totalValue}`;
-          currentEditingRow.children[9].innerText = editedItem.supplier;
-          currentEditingRow.children[10].innerText = `${editedItem.leadTime} Days`;
-        }
-
         closeModal();
+        location.reload();
       } else {
         alert('Failed to save item: ' + result.message);
       }
     } catch (error) {
       console.error('Error saving item:', error);
       alert('Error saving item. Check console for details.');
-    }
-  });
-
-  // Optional: close modal if clicked outside content
-  window.addEventListener('click', (e) => {
-    if (e.target === editModal) {
-      closeModal();
     }
   });
 

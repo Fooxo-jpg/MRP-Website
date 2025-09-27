@@ -941,39 +941,107 @@ button svg:hover {
   border-radius: 5px;
 }
 
+#edit_InventoryItemModal .form-group select {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+  background-color: var(--base-clr);
+  color: var(--text-clr);
+  appearance: none;
+  outline: none;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+#edit_InventoryItemModal .form-group select:focus {
+  border-color: var(--line-clr);
+  box-shadow: 0 0 4px var(--line-clr);
+}
+
 #edit_InventoryItemModal table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
 }
 
 #edit_InventoryItemModal th,
 #edit_InventoryItemModal td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: left;
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
 }
 
 #edit_InventoryItemModal .modal-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 15px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
 }
 
 #edit_InventoryItemModal .modal-buttons button {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.2em;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
 }
 
 #edit_InventoryItemModal .modal-buttons button[type="submit"] {
-    background-color: var(--accent-clr);
-    color: white;
+  background-color: var(--accent-clr);
+  color: white;
+  align-items: center;
+}
+
+#deleteItemBtn {
+  background-color: #c76363;
+  color: white;
+  align-items: center;
 }
 
 #edit_InventoryItemModal .modal-buttons button[type="button"] {
-    background-color: var(--base-clr);
-    color: var(--text-clr);
+  background-color: var(--base-clr);
+  color: var(--text-clr);
+}
+
+/* ITEM ANALYTICS */
+#itemAnalyticsModal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+  font-family: 'Poppins';
+}
+
+#itemAnalyticsModal .modal-content {
+  background: #fff;
+  margin: 50px auto;
+  padding: 20px 25px;
+  border-radius: 10px;
+  width: 600px;
+  max-width: 90%;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+#itemAnalyticsModal table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+#itemAnalyticsModal th, 
+#itemAnalyticsModal td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
 }

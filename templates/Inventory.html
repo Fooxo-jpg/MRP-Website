@@ -237,16 +237,19 @@
           <tbody class="style">
             <input type="hidden" id="hasData" value="{{ 'true' if has_data else 'false' }}">
             {% for entry in entries %}
-            <tr>
+            <tr data-id="{{ entry._id }}" {% if entry.currentStock < entry.reorderLevel %}
+              style="background-color: #fae0e0;" {% endif %}>
               <td>{{ entry.itemCode }}</td>
               <td>{{ entry.itemName }}</td>
               <td>{{ entry.category }}</td>
               <td>{{ entry.uom }}</td>
-              <td>{{ entry.currentStock }}</td>
+              <td {% if entry.currentStock < entry.reorderLevel %} style="color: red;" {% endif %}>
+                {{ entry.currentStock }}
+              </td>
               <td>{{ entry.reorderLevel }}</td>
               <td>{{ entry.reorderQty }}</td>
-              <td>$ {{ entry.costPerUnit }}</td>
-              <td>$ {{ entry.totalValue }}</td>
+              <td>$ {{ "%.2f"|format(entry.costPerUnit) }}</td>
+              <td>$ {{ "%.2f"|format(entry.totalValue) }}</td>
               <td>{{ entry.supplier }}</td>
               <td>{{ entry.leadTime }} Days</td>
               <td>
@@ -255,7 +258,7 @@
                     <path
                       d="M200-200h57l391-391-57-57-391 391v57Zm-40 80q-17 0-28.5-11.5T120-160v-97q0-16 6-30.5t17-25.5l505-504q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L313-143q-11 11-25.5 17t-30.5 6h-97Zm600-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z" />
                   </svg></button>
-                <button class="icon-btn" id="itemAnalytics"><svg xmlns="http://www.w3.org/2000/svg" height="24px"
+                <button class="icon-btn itemAnalyticsBtn" data-itemcode="{{ entry.itemCode }}"><svg xmlns="http://www.w3.org/2000/svg" height="24px"
                     viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
                     <path
                       d="M320-480q-17 0-28.5 11.5T280-440v120q0 17 11.5 28.5T320-280q17 0 28.5-11.5T360-320v-120q0-17-11.5-28.5T320-480Zm320-200q-17 0-28.5 11.5T600-640v320q0 17 11.5 28.5T640-280q17 0 28.5-11.5T680-320v-320q0-17-11.5-28.5T640-680ZM480-400q-17 0-28.5 11.5T440-360v40q0 17 11.5 28.5T480-280q17 0 28.5-11.5T520-320v-40q0-17-11.5-28.5T480-400ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Zm280 280q17 0 28.5-11.5T520-520q0-17-11.5-28.5T480-560q-17 0-28.5 11.5T440-520q0 17 11.5 28.5T480-480Z" />
@@ -289,12 +292,12 @@
           <label for="category">Category</label>
           <select id="category" name="category" required>
             <option value="">Select Category</option>
-            <option value="rawMaterials">Raw Materials</option>
-            <option value="components">Components</option>
-            <option value="subAssembly">Sub-Assembly</option>
-            <option value="packaging">Packaging</option>
-            <option value="consumables">Consumables</option>
-            <option value="spareParts">Spare Parts</option>
+            <option value="Raw Materials">Raw Materials</option>
+            <option value="Components">Components</option>
+            <option value="Sub Assembly">Sub-Assembly</option>
+            <option value="Packagin">Packaging</option>
+            <option value="Consumables">Consumables</option>
+            <option value="Spare Parts">Spare Parts</option>
           </select>
         </div>
 
@@ -307,7 +310,9 @@
             <option value="m">m</option>
             <option value="box">box</option>
             <option value="set">set</option>
-            <option value="L">L</option>
+            <option value="tub">tube</option>
+            <option value="bottle">bottle</option>
+            <option value="set">set</option>
           </select>
         </div>
 
@@ -369,6 +374,8 @@
       <!-- Item Info Form -->
       <form id="editItemForm">
         <div class="form-grid">
+          <input type="hidden" id="edit_itemId">
+
           <div class="form-group">
             <label for="itemName">Item Name:</label>
             <input type="text" id="edit_itemName" name="itemName" value="XXXXXXXXXX">
@@ -376,12 +383,20 @@
 
           <div class="form-group">
             <label for="itemCode">Item Code:</label>
-            <input type="text" id="edit_itemCode" name="itemCode" value="XX-000">
+            <input type="text" id="edit_itemCode" name="itemCode" value="XX-000" readonly>
           </div>
 
           <div class="form-group">
             <label for="category">Category:</label>
-            <input type="text" id="edit_category" name="category" value="XXXXXXXXXX">
+            <select id="edit_category" name="category" required>
+              <option value="">Select Category</option>
+              <option value="Raw Materials">Raw Materials</option>
+              <option value="Components">Components</option>
+              <option value="Sub Assembly">Sub-Assembly</option>
+              <option value="Packagin">Packaging</option>
+              <option value="Consumables">Consumables</option>
+              <option value="Spare Parts">Spare Parts</option>
+            </select>
           </div>
 
           <div class="form-group">
@@ -425,40 +440,39 @@
           </div>
         </div>
 
-        <hr>
-
-        <!-- Used In Table -->
-        <h3>USED IN:</h3>
-        <table id="usedInTable">
-          <thead>
-            <tr>
-              <th>Product Code</th>
-              <th>Product Name</th>
-              <th>Quantity Used</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Rows dynamically filled with JS -->
-            <tr>
-              <td>PR-001</td>
-              <td>Product A</td>
-              <td>10</td>
-            </tr>
-            <tr>
-              <td>PR-002</td>
-              <td>Product B</td>
-              <td>5</td>
-            </tr>
-          </tbody>
-        </table>
-
         <!-- Buttons -->
         <div class="modal-buttons">
           <button type="button" onclick="closeModal('edit_InventoryItemModal')">Cancel</button>
-          <button type="submit">Save</button>
+          <button type="button" id="deleteItemBtn"><svg xmlns="http://www.w3.org/2000/svg" height="24px"
+              viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
+              <path
+                d="M280-120q-33 0-56.5-23.5T200-200v-520q-17 0-28.5-11.5T160-760q0-17 11.5-28.5T200-800h160q0-17 11.5-28.5T400-840h160q17 0 28.5 11.5T600-800h160q17 0 28.5 11.5T800-760q0 17-11.5 28.5T760-720v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM400-280q17 0 28.5-11.5T440-320v-280q0-17-11.5-28.5T400-640q-17 0-28.5 11.5T360-600v280q0 17 11.5 28.5T400-280Zm160 0q17 0 28.5-11.5T600-320v-280q0-17-11.5-28.5T560-640q-17 0-28.5 11.5T520-600v280q0 17 11.5 28.5T560-280ZM280-720v520-520Z" />
+            </svg>Delete</button>
+          <button type="submit"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+              width="24px" fill="#e3e3e3">
+              <path
+                d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h447q16 0 30.5 6t25.5 17l114 114q11 11 17 25.5t6 30.5v447q0 33-23.5 56.5T760-120H200Zm560-526L646-760H200v560h560v-446ZM480-240q50 0 85-35t35-85q0-50-35-85t-85-35q-50 0-85 35t-35 85q0 50 35 85t85 35ZM280-560h280q17 0 28.5-11.5T600-600v-80q0-17-11.5-28.5T560-720H280q-17 0-28.5 11.5T240-680v80q0 17 11.5 28.5T280-560Zm-80-86v446-560 114Z" />
+            </svg>Save</button>
         </div>
       </form>
     </div>
   </div>
 
+  <div id="itemAnalyticsModal" class="modal">
+    <div class="modal-content">
+      <h2>Item Usage Analytics</h2>
+      <table id="analyticsTable">
+        <thead>
+          <tr>
+            <th>Product Name</th>
+            <th>Quantity Used</th>
+            <th>UOM</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows will be dynamically added here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
 </html>

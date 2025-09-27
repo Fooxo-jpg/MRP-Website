@@ -158,13 +158,13 @@ def Inventory():
         itemCode = generate_part_id(itemName)
         category = request.form.get("category")
         uom = request.form.get("uom")
-        currentStock = request.form.get("currentStock")
-        reorderLvl = request.form.get("reorderLevel")
-        reorderQty = request.form.get("reorderQty")
-        costPerUnit = request.form.get("costPerUnit")
+        currentStock = int(request.form.get("currentStock") or 0)
+        reorderLvl = int(request.form.get("reorderLevel") or 0)
+        reorderQty = int(request.form.get("reorderQty") or 0)
+        costPerUnit = int(request.form.get("costPerUnit") or 0)
         totalValue = calculate_total_value(currentStock, costPerUnit)
         supplier = request.form.get("supplier")
-        leadTime = request.form.get("leadTime")
+        leadTime = int(request.form.get("leadTime") or 0)
 
         #put into mongoDB
         Inventory_Entries.insert_one({
@@ -190,6 +190,82 @@ def Inventory():
         entries=inventory_entries,
         has_data=Inventory_Entries.count_documents({}) > 0
     )
+
+@app.route("/update-inventory", methods=["POST"])
+def update_inventory():
+    if 'user' not in session:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    
+    try:
+        data = request.get_json()
+        item_id = data.get("_id")
+
+        if not item_id:
+            return jsonify({"success": False, "message": "_id missing"}), 400
+        
+        item_name = data.get("name")
+        new_item_code = generate_part_id(item_name)
+        total_value = calculate_total_value(data.get("currentStock"), data.get("costPerUnit"))
+
+        result = Inventory_Entries.update_one(
+            {"_id": ObjectId(item_id)},
+            {"$set": {
+                "itemName": item_name,
+                "itemCode": new_item_code,  # regenerate based on name
+                "category": data.get("category"),
+                "uom": data.get("uom"),
+                "currentStock": data.get("currentStock"),
+                "reorderLevel": data.get("reorderLevel"),
+                "reorderQty": data.get("reorderQty"),
+                "costPerUnit": data.get("costPerUnit"),
+                "totalValue": total_value,
+                "supplier": data.get("supplier"),
+                "leadTime": data.get("leadTime")
+            }}
+        )
+
+        if result.matched_count == 0:
+            return jsonify({"success": False, "message": "Item not found"}), 404
+
+        # Optionally: log a notification
+        add_notification("Inventory Updated", f"{item_name} [{new_item_code}] was updated", "success")
+        return jsonify({"success": True, "itemCode": new_item_code})
+    
+    except Exception as e:
+        print("Error updating inventory:", e)
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@app.route("/delete-inventory", methods=["POST"])
+def delete_inventory():
+    if 'user' not in session:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+
+    try:
+        data = request.get_json()
+        item_id = data.get("_id")
+
+        if not item_id:
+            return jsonify({"success": False, "message": "_id missing"}), 400
+
+        result = Inventory_Entries.delete_one({"_id": ObjectId(item_id)})
+
+        if result.deleted_count == 0:
+            return jsonify({"success": False, "message": "Item not found"}), 404
+
+        add_notification("Inventory Deleted", f"Item with ID {item_id} was deleted", "warning")
+        return jsonify({"success": True})
+    
+    except Exception as e:
+        print("Error deleting inventory:", e)
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@app.route("/item-analytics/<item_code>")
+def item_analytics(item_code):
+    # Query BOM_Entries where itemCode matches
+    usage_entries = list(BOM_Entries.find({"itemCode": item_code}, {"_id": 0, "productName": 1, "qtyPerUnit": 1, "uom": 1}))
+    
+    # Return JSON
+    return jsonify(usage_entries)
 
 @app.route("/export_csv_inv", methods=["POST"])
 def export_csv_inv():
@@ -273,10 +349,17 @@ def bom():
 
     if request.method == "POST":
         productName = request.form.get("productName")
+        itemName = request.form.get("itemName")
+
+        # CHECK IF ITEM EXISTS IN INVENTORY:
+        inventory_item = Inventory_Entries.find_one({"itemName": {"$regex": f"^{itemName}$", "$options": "i"}})
+        if not inventory_item:
+            return jsonify({"success": False, "message": f"Item '{itemName}' does not exist in inventory."})
+        
+        # IF IT EXISTS THEN CONTINUE
         productCode = generate_product_code(productName)
         bomLevel = request.form.get("bomLevel")
-        itemName = request.form.get("itemName")
-        itemCode = generate_part_id(itemName)
+        itemCode = inventory_item["itemCode"] # USES THE ITEM CODE MADE IN INVENTORY
         qtyPerUnit = request.form.get("qtyPerUnit")
         uom = request.form.get("uom")
         supplier = request.form.get("supplier")
@@ -298,8 +381,7 @@ def bom():
         })
 
         add_notification("New Item Created!", f"{itemName}[{itemCode}] | {productName}[{productCode}]", "success")
-
-        return redirect(url_for("bom"))
+        return jsonify({"success": True, "message": "BOM Item Added Successfully!"})
     
     bom_entry = list(BOM_Entries.find().sort("number", 1))
     return render_template("BOM.html", entries=bom_entry, has_data=BOM_Entries.count_documents({}) > 0)

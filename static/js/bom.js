@@ -72,6 +72,42 @@ document.addEventListener("DOMContentLoaded", () => {
       if (e.target === modal) modal.style.display = "none";
     });
   }
+  
+  // -------------------------
+  // BOM FORM VALIDATION (INVENTORY CHECK)
+  // -------------------------
+  const createBOMForm = document.getElementById("createForm");
+  if (createBOMForm) {
+    createBOMForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(createBOMForm);
+ 
+      try {
+        const response = await fetch("/BOM", {
+          method: "POST",
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (!result.success) { // IF ITEM DOES NOT EXIST
+          alert(result.message);
+          return;
+        }
+
+        alert("BOM Item Added Successfully!");
+        createBOMForm.reset();
+        document.getElementById("createModal").style.display = "none";
+
+        location.reload(); // REFRESHES THE TABLE
+      } catch (e) {
+        console.error("Error creating BOM Item:", e);
+        alert("Failed to create BOM Item.");
+      }
+    })
+  }
+
   // -------------------------
   // Import from CSV
   // -------------------------
