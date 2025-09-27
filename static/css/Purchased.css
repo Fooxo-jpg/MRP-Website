@@ -1,0 +1,598 @@
+/* =========================
+   Base / Reset
+========================= */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+:root {
+  --base-clr: #f9f6f3;
+  --line-clr: #d6cfc9;
+  --hover-clr: #f0e9e4;
+  --text-clr: #3b2f27;
+  --accent-clr: #b27c50;
+  --secondary-text-clr: #7a6a5f;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins';
+  box-sizing: border-box;
+}
+
+html {
+  font-family: Poppins, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.5rem;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: var(--base-clr);
+  color: var(--text-clr);
+  display: grid;
+  grid-template-columns: auto 1fr;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}
+
+/* =========================
+   Topbar
+========================= */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--base-clr);
+  padding: 1em 1.5em;
+  border-bottom: 1px solid var(--line-clr);
+  margin: -30px -30px 30px -30px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.topbar h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+}
+
+.topbar-icon-btn {
+  background: none;
+  border: none;
+  display: inline-flex;
+}
+
+.topbar-icon-btn svg {
+  width: 25px;
+  height: 25px;
+}
+
+/* =========================
+   Sidebar
+========================= */
+#sidebar {
+  box-sizing: border-box;
+  height: 100vh;
+  width: 200px;
+  padding: 5px 1em;
+  background-color: var(--base-clr);
+  border-right: 1px solid var(--line-clr);
+
+  position: sticky;
+  top: 0;
+  align-self: start;
+  transition: 300ms ease-in-out;
+  overflow: hidden;
+  text-wrap: nowrap;
+}
+
+#sidebar.close {
+  padding: 5px;
+  width: 60px;
+}
+
+
+#sidebar ul {
+  list-style: none;
+}
+
+#sidebar>ul>li:first-child {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+#sidebar>ul>li:first-child .logo {
+  font-weight: 600;
+}
+
+#sidebar ul li.active a {
+  color: var(--accent-clr);
+}
+
+#sidebar ul li.active a svg {
+  fill: var(--accent-clr);
+}
+
+#sidebar a,
+#sidebar .dropdown-btn,
+#sidebar .logo {
+  border-radius: .5em;
+  padding: .85em;
+  text-decoration: none;
+  color: var(--text-clr);
+  display: flex;
+  align-items: center;
+  gap: 1em;
+}
+
+#sidebar svg {
+  width: 24px !important;
+  height: 24px !important;
+  flex-shrink: 0;
+  fill: var(--text-clr);
+}
+
+#sidebar a span,
+#sidebar .dropdown-btn span {
+  flex-grow: 1;
+}
+
+#sidebar a:hover,
+#sidebar .dropdown-btn:hover {
+  background-color: var(--hover-clr);
+}
+
+#sidebar .sub-menu {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: 300ms ease-in-out;
+}
+
+#sidebar .sub-menu>div {
+  overflow: hidden;
+}
+
+#sidebar .sub-menu.show {
+  grid-template-rows: 1fr;
+}
+
+#sidebar .sub-menu a {
+  padding-left: 2em;
+}
+
+.dropdown-btn {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.dropdown-btn svg {
+  transition: 200ms ease;
+}
+
+.rotate svg:last-child {
+  rotate: 180deg;
+}
+
+#toggle-btn {
+  margin-left: auto;
+  padding: 1em;
+  border: none;
+  border-radius: .5em;
+  background: none;
+  cursor: pointer;
+}
+
+#toggle-btn svg {
+  transition: rotate 150ms ease;
+}
+
+#toggle-btn:hover {
+  background-color: var(--hover-clr);
+}
+
+/* =========================
+   Main Content
+========================= */
+main {
+  padding: min(30px, 7%);
+  min-width: none;
+}
+
+main p {
+  color: var(--secondary-text-clr);
+  margin-top: 5px;
+  margin-bottom: 15px;
+}
+
+.container {
+  border: 1px solid var(--line-clr);
+  border-radius: 1em;
+  margin-bottom: 20px;
+  padding: min(3em, 15%);
+
+  h2,
+  p {
+    margin-top: 1em
+  }
+}
+
+/* =========================
+   BILL OF MATERIAL TABLE
+========================= */
+.inventory-section {
+  background: white;
+  border-radius: 0.6em;
+  padding: 1.5em;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  margin-bottom: 1rem;
+}
+
+.section-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section-header h2 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--accent-clr, #333);
+}
+
+/* BUTTONS */
+button svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  transition: fill 0.2s ease;
+}
+
+button svg:hover {
+  fill: var(--accent-clr)
+}
+
+.filter-btn {
+  background: var(--hover-clr);
+  border: none;
+  cursor: pointer;
+  padding: 0.5em;
+  border-radius: 0.4em;
+  margin-right: 0.1em;
+  transition: background 0.2s ease;
+}
+
+.filter-btn svg {
+  width: 22px;
+  height: 22px;
+  fill: var(--text-clr);
+  transition: fill 0.2s ease;
+}
+
+.filter-btn:hover svg {
+  fill: var(--accent-clr);
+}
+
+.section-header button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 0.4em;
+  transition: all 0.2s ease;
+}
+
+.create-btn {
+  background: var(--accent-clr);
+  color: white;
+  border: none;
+  padding: 0.5em 1.2em;
+  margin-left: auto;
+  margin-right: 0.1em;
+}
+
+.create-btn:hover {
+  background: var(--hover-clr);
+}
+
+.secondary-btn {
+  background: white;
+  border: none;
+  color: var(--text-clr, #ddd);
+  padding: 0.5em 1em;
+  border-radius: 0.4em;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.secondary-btn:hover {
+  background: var(--hover-clr);
+}
+
+/* TABLE */
+.table-wrapper {
+  overflow-x: auto;
+  position: relative;
+}
+
+.inventory-table {
+  width: 160%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  background: white;
+  border-radius: 0.6em;
+  overflow: hidden;
+  table-layout: fixed;
+}
+
+.inventory-table th,
+.inventory-table td {
+  padding: 0.75em 1em;
+  text-align: left;
+  border-bottom: 1px solid var(--line-clr);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inventory-table th {
+  background: var(--base-clr, #333);
+  font-weight: 500;
+  color: var(--text-clr, #ddd);
+}
+
+.inventory-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.inventory-table .style tr:hover {
+  background-color: var(--base-clr);
+}
+
+.inventory-table thead {
+  position: sticky;
+}
+
+.inventory-table input {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 0.3em 0.5em;
+  background-color: var(--base-clr);
+  border: 1px solid var(--line-clr);
+  border-radius: 0.3em;
+  color: var(--text-clr);
+  font-size: 0.85rem;
+
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.inventory-table th:first-child svg {
+  width: 16px;
+  height: 16px;
+  margin-left: 0.3em;
+  vertical-align: middle;
+  /* aligns with text */
+  cursor: pointer;
+  fill: var(--text-clr);
+  transition: fill 0.2s ease, transform 0.2s ease;
+}
+
+.inventory-table td:last-child,
+.inventory-table th:last-child {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.3em;
+  border-radius: 0.4em;
+  font-size: 1rem;
+  margin: 0 0.2em;
+  transition: background 0.2s;
+}
+
+.icon-btn svg {
+  fill: var(--secondary-text-clr);
+  width: 20px;
+  height: 20px;
+  transition: fill 0.2s;
+}
+
+.icon-btn svg:hover {
+  fill: var(--accent-clr);
+}
+
+.filter-range {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+}
+
+.small {
+  overflow: visible;
+  text-overflow: clip;
+  padding: 0.5em 0.6em;
+  font-weight: 800;
+  font-size: 0.8em;
+}
+
+/* =========================
+   Profile Dropdown
+========================= */
+.profile-container {
+  position: relative;
+  margin-top: -40px;
+  display: inline-block;
+}
+
+.profile-menu {
+  display: none;
+  position: absolute;
+  top: 55px;
+  right: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  z-index: 1000;
+  padding: 10px 0;
+}
+
+.profile-menu.show {
+  display: block;
+}
+
+.profile-header {
+  padding: 0 15px 10px 15px;
+}
+
+.profile-name {
+  color: var(--accent-clr);
+  font-weight: 600;
+  font-size: 15px;
+  margin: 0;
+}
+
+.profile-email {
+  font-size: 13px;
+  color: #666;
+  margin: 2px 0 0 0;
+}
+
+.profile-menu a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  color: var(--text-clr);
+  padding: 10px 15px;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.profile-menu a:hover {
+  background: #f5f5f5;
+}
+
+.profile-menu a:hover>svg {
+  fill: var(--accent-clr);
+}
+
+/* ITEM LIST MODAL */
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.close {
+  float: right;
+  font-size: 20px;
+  cursor: 
+  pointer;
+}
+
+.edit-btn {
+  padding: 0.35em 1.8em;   /* more horizontal padding */
+  min-width: 90px;         /* ensures consistent width */
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid var(--accent-clr);
+  border-radius: 0.5em;
+  background: transparent;
+  color: var(--accent-clr);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.edit-btn:hover {
+  background: var(--accent-clr);
+  color: white;
+}
+
+
+/* =========================
+   Status Dropdown Styling
+========================= */
+.status-dropdown {
+  padding: 0.4em 1.2em 0.4em 0.6em;
+  border: 1px solid var(--line-clr);
+  border-radius: 0.5em;
+  background: white;
+  color: var(--text-clr);
+  font-size: 0.85rem;
+  cursor: pointer;
+  appearance: none; /* removes default arrow */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  position: relative;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* Hover & focus */
+.status-dropdown:hover {
+  border-color: var(--accent-clr);
+}
+.status-dropdown:focus {
+  outline: none;
+  border-color: var(--accent-clr);
+  box-shadow: 0 0 0 2px rgba(0, 150, 255, 0.2);
+}
+
+/* Optional: Add custom arrow */
+.status-dropdown {
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%23999' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.6em center;
+  background-size: 1em;
+}
+
+/* Optional: Different colors for statuses */
+.status-dropdown option[value="Pending"] {
+  color: #ffe084;
+}
+.status-dropdown option[value="Processing"] {
+  color: #71aaff;
+}
+.status-dropdown option[value="Completed"] {
+  color: #569263;
+}
+.status-dropdown option[value="Cancelled"] {
+  color: #c55560;
+}

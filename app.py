@@ -21,6 +21,7 @@ Inventory_Entries = db.inventory
 productCount = db.product
 notifications = db.notifications
 user_notifications = db.user_notifications
+purchasedOrders = db.purchasedOrders
 
 def add_notification(title, message, type="info"):
     notifications.insert_one({
@@ -107,6 +108,18 @@ def reindex_part_numbers():
         new_code = f"{prefix}-{idx+1:03d}"
         BOM_Entries.update_one({"_id": entry["_id"]}, {"$set": {"itemCode": new_code}})
 
+def update_bom_cost_for_item(itemName):
+    inventory_item = Inventory_Entries.find_one({"itemName": itemName})
+    if not inventory_item:
+        return
+
+    inventory_cost = float(inventory_item.get("costPerUnit", 0))
+    bom_entries = BOM_Entries.find({"itemName": itemName})
+    for entry in bom_entries:
+        qty = float(entry.get("qtyPerUnit", 0))
+        new_cost = qty * inventory_cost
+        BOM_Entries.update_one({"_id": entry["_id"]}, {"$set": {"costPerUnit": new_cost}})
+
 # REDIRECT TO LOGIN BY DEFAULT:
 @app.route('/')
 def home():
@@ -153,15 +166,46 @@ def production():
         return redirect(url_for('signin'))
     return render_template('Production.html')
 
+# PURCHASED
 @app.route('/Purchased')
-def purchased():
+def purchased_page():
     if 'user' not in session:
         return redirect(url_for('signin'))
-    return render_template('Purchased.html')
+    
+    purchased_entries = list(purchasedOrders.find().sort("orderDate", -1))
+    return render_template(
+        "Purchased.html",
+        entries=purchased_entries,
+        has_data=len(purchased_entries) > 0
+    )
+
+@app.route('/get_bom_items/<productName>')
+def get_bom_items(productName):
+    bom_entries = list(BOM_Entries.find({"productName": productName}))
+    results = []
+
+    for entry in bom_entries:
+        itemName = entry.get("itemName", "")
+        inventory_item = Inventory_Entries.find_one({"itemName": itemName})
+
+        if inventory_item:
+            qtyPerUnit = float(entry.get("qtyPerUnit", 0))  # BOM-specific qty
+            pricePerUnit = float(inventory_item.get("costPerUnit", 0))
+        else:
+            qtyPerUnit = 0
+            pricePerUnit = 0
+
+        results.append({
+            "itemName": itemName,
+            "qtyPerUnit": qtyPerUnit,
+            "pricePerUnit": pricePerUnit
+        })
+
+    return jsonify(results)
 
 # INVENTORY 
 @app.route('/Inventory', methods=["GET", "POST"])
-def Inventory():
+def inventory_page():
     if 'user' not in session:
         return redirect(url_for('signin'))
 
@@ -236,6 +280,8 @@ def update_inventory():
             }}
         )
 
+        update_bom_cost_for_item(item_name)
+
         if result.matched_count == 0:
             return jsonify({"success": False, "message": "Item not found"}), 404
 
@@ -306,7 +352,7 @@ def export_csv_inv():
     projection = {v: 1 for v in column_map.values()}
     projection["_id"] = 0
 
-    inventory_entries = list(Inventory.find({}, projection))
+    inventory_entries = list(Inventory_Entries.find({}, projection))
 
     # Create CSV
     output = io.StringIO()
@@ -372,11 +418,14 @@ def bom():
         productCode = generate_product_code(productName)
         bomLevel = request.form.get("bomLevel")
         itemCode = inventory_item["itemCode"] # USES THE ITEM CODE MADE IN INVENTORY
-        qtyPerUnit = request.form.get("qtyPerUnit")
+        qtyPerUnit = float(request.form.get("qtyPerUnit"))
+        
+        inventory_cost = float(inventory_item.get("costPerUnit", 0))
+        costPerUnit = qtyPerUnit * inventory_cost
+        
         uom = request.form.get("uom")
         supplier = request.form.get("supplier")
         leadTime = request.form.get("leadTime")
-        costPerUnit = request.form.get("costPerUnit")
 
         #put into mongoDB
         BOM_Entries.insert_one({

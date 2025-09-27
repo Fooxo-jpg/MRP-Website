@@ -5,8 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-  <script src="{{ url_for('static', filename='js/draft.js') }}" defer></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/Purchased.css') }}">
+  <script src="{{ url_for('static', filename='js/Purchased.js') }}" defer></script>
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/Chair.svg') }}">
 </head>
 
@@ -34,13 +34,16 @@
       {% if session.get('role') == 'admin' %}
       <li>
         <a href="{{ url_for('admin') }}">
-          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M160-120q-33 0-56.5-23.5T80-200v-560q0-33 23.5-56.5T160-840h200q33 0 56.5 23.5T440-760v560q0 33-23.5 56.5T360-120H160Zm440 0q-33 0-56.5-23.5T520-200v-560q0-33 23.5-56.5T600-840h200q33 0 56.5 23.5T880-760v560q0 33-23.5 56.5T800-120H600Zm-440-80h200v-560H160v560Zm440 0h200v-560H600v560ZM320-400q0-17-11.5-28.5T280-440h-40q-17 0-28.5 11.5T200-400q0 17 11.5 28.5T240-360h40q17 0 28.5-11.5T320-400Zm440 0q0-17-11.5-28.5T720-440h-40q-17 0-28.5 11.5T640-400q0 17 11.5 28.5T680-360h40q17 0 28.5-11.5T760-400ZM320-520q0-17-11.5-28.5T280-560h-40q-17 0-28.5 11.5T200-520q0 17 11.5 28.5T240-480h40q17 0 28.5-11.5T320-520Zm440 0q0-17-11.5-28.5T720-560h-40q-17 0-28.5 11.5T640-520q0 17 11.5 28.5T680-480h40q17 0 28.5-11.5T760-520ZM320-640q0-17-11.5-28.5T280-680h-40q-17 0-28.5 11.5T200-640q0 17 11.5 28.5T240-600h40q17 0 28.5-11.5T320-640Zm440 0q0-17-11.5-28.5T720-680h-40q-17 0-28.5 11.5T640-640q0 17 11.5 28.5T680-600h40q17 0 28.5-11.5T760-640ZM160-200h200-200Zm440 0h200-200Z"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
+            <path
+              d="M160-120q-33 0-56.5-23.5T80-200v-560q0-33 23.5-56.5T160-840h200q33 0 56.5 23.5T440-760v560q0 33-23.5 56.5T360-120H160Zm440 0q-33 0-56.5-23.5T520-200v-560q0-33 23.5-56.5T600-840h200q33 0 56.5 23.5T880-760v560q0 33-23.5 56.5T800-120H600Zm-440-80h200v-560H160v560Zm440 0h200v-560H600v560ZM320-400q0-17-11.5-28.5T280-440h-40q-17 0-28.5 11.5T200-400q0 17 11.5 28.5T240-360h40q17 0 28.5-11.5T320-400Zm440 0q0-17-11.5-28.5T720-440h-40q-17 0-28.5 11.5T640-400q0 17 11.5 28.5T680-360h40q17 0 28.5-11.5T760-400ZM320-520q0-17-11.5-28.5T280-560h-40q-17 0-28.5 11.5T200-520q0 17 11.5 28.5T240-480h40q17 0 28.5-11.5T320-520Zm440 0q0-17-11.5-28.5T720-560h-40q-17 0-28.5 11.5T640-520q0 17 11.5 28.5T680-480h40q17 0 28.5-11.5T760-520ZM320-640q0-17-11.5-28.5T280-680h-40q-17 0-28.5 11.5T200-640q0 17 11.5 28.5T240-600h40q17 0 28.5-11.5T320-640Zm440 0q0-17-11.5-28.5T720-680h-40q-17 0-28.5 11.5T640-640q0 17 11.5 28.5T680-600h40q17 0 28.5-11.5T760-640ZM160-200h200-200Zm440 0h200-200Z" />
+          </svg>
           <span>Admin</span>
         </a>
       </li>
       {% endif %}
       <li>
-        <a href="{{ url_for('Inventory') }}">
+        <a href="{{ url_for('inventory_page') }}">
           <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
             <path
               d="m620-275 198-198q11-11 28-11t28 11q11 11 11 28t-11 28L648-191q-12 12-28 12t-28-12L478-305q-11-11-11-28t11-28q11-11 28-11t28 11l86 86ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h167q11-35 43-57.5t70-22.5q40 0 71.5 22.5T594-840h166q33 0 56.5 23.5T840-760v160q0 17-11.5 28.5T800-560q-17 0-28.5-11.5T760-600v-160h-80v80q0 17-11.5 28.5T640-640H320q-17 0-28.5-11.5T280-680v-80h-80v560h200q17 0 28.5 11.5T440-160q0 17-11.5 28.5T400-120H200Zm280-640q17 0 28.5-11.5T520-800q0-17-11.5-28.5T480-840q-17 0-28.5 11.5T440-800q0 17 11.5 28.5T480-760Z" />
@@ -71,7 +74,7 @@
         </button>
         <ul class="sub-menu">
           <div>
-            <li class="active"><a href="{{ url_for('purchased') }}">Purchased Orders</a></li>
+            <li class="active"><a href="{{ url_for('purchased_page') }}">Purchased Orders</a></li>
             <li><a href="{{ url_for('production') }}">Production Orders</a></li>
           </div>
         </ul>
@@ -129,11 +132,88 @@
     </div>
 
     <div class="inventory-section">
+      <div class="section-header">
+        <div class="section-top">
+          <h2>Purchased Orders</h2>
+        </div>
+      </div>
 
-
-
+      <div class="table-wrapper">
+        <table class="inventory-table">
+          <thead>
+            <tr>
+              <th>PO #</th>
+              <th>ORDER DATE</th>
+              <th>EST. DELIVERY</th>
+              <th>PRODUCT ORDER</th>
+              <th>QUANTITY ORDERED</th>
+              <th>UNIT PRICE</th>
+              <th>TOTAL COST</th>
+              <th>STATUS</th>
+              <th>RECEIVED QUANTITY</th>
+              <th>OUTSTANDING QUANTITY</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody class="style">
+            {% if has_data %}
+            {% for entry in entries %}
+            <tr data-id="{{ entry._id }}">
+              <td>{{ entry.poNumber }}</td>
+              <td>{{ entry.orderDate }}</td>
+              <td>{{ entry.estimatedDelivery }}</td>
+              <td>{{ entry.productName }}</td>
+              <td>{{ entry.quantityOrdered }}</td>
+              <td>$ {{ "%.2f"|format(entry.unitPrice) }}</td>
+              <td>$ {{ "%.2f"|format(entry.totalCost) }}</td>
+              <td>
+                <select class="status-dropdown">
+                  <option value="Pending">Pending</option>
+                  <option value="Processing">Processing</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </td>
+              <td>{{ entry.receivedQuantity }}</td>
+              <td>{{ entry.outstandingQuantity }}</td>
+              <td>
+                <button class="edit-btn">Edit</button>
+              </td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <td colspan="11">No Purchased Orders Found...</td>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </main>
+  <!-- Modal -->
+  <div id="bomModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>BOM for <span id="modalProductName"></span></h2>
+      <p>Quantity Ordered: <span id="modalQtyOrdered"></span></p>
+      <table id="bomTable">
+        <thead>
+          <tr>
+            <th>ITEM NAME</th>
+            <th>QTY/UNIT</th>
+            <th>PRICE/UNIT</th>
+            <th>QTY TOTAL</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3"><strong>TOTAL:</strong></td>
+            <td id="bomTotal"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
 
 </body>
 
