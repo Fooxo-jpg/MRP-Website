@@ -108,17 +108,61 @@ def reindex_part_numbers():
         new_code = f"{prefix}-{idx+1:03d}"
         BOM_Entries.update_one({"_id": entry["_id"]}, {"$set": {"itemCode": new_code}})
 
-def update_bom_cost_for_item(itemName):
-    inventory_item = Inventory_Entries.find_one({"itemName": itemName})
-    if not inventory_item:
-        return
+# COMPUTE TOTAL COST PER UNIT FOR PRODUCT
+# SUMS (QTYPERUNIT * ITEM COSTPERUNIT) FOR ALL BOM ITEMS 
+def update_product_cost(productName):
+    bom_items = list(BOM_Entries.find({"productName": productName}))
+    total_cost = 0
 
-    inventory_cost = float(inventory_item.get("costPerUnit", 0))
-    bom_entries = BOM_Entries.find({"itemName": itemName})
-    for entry in bom_entries:
-        qty = float(entry.get("qtyPerUnit", 0))
-        new_cost = qty * inventory_cost
-        BOM_Entries.update_one({"_id": entry["_id"]}, {"$set": {"costPerUnit": new_cost}})
+    for item in bom_items:
+        qty = float(item.get("qtyPerUnit", 0))
+        # GET CURRENT INVENTORY COST
+        inventory_item = Inventory_Entries.find_one({"itemName": item["itemName"]})
+        item_cost = float(inventory_item.get("costPerUnit", 0)) if inventory_item else 0
+        total_cost += qty * item_cost
+
+    # UPDATE ALL BOM ENTRIES FOR THIS PRODUCT
+    BOM_Entries.update_many(
+        {"productName": productName},
+        {"$set": {"costPerUnit": total_cost}}
+    )
+
+    # STORE PRODUCT COST IN COLLECTION
+    productCount.update_one(
+        {"name": productName},
+        {"$set": {"costPerUnit": total_cost}},
+        upsert=True
+    )
+
+    return total_cost
+
+# COMPUTE TOTAL PRODUCT COST FROM ALL BOM ITEMS
+# [qtyPerUnit * inventory costPerUnit]
+# UPDATES EVERY BOM ENTRY FOR THAT PRODUCT WITH TOTAL
+def update_bom_total_cost(productName):
+    bom_items = list(BOM_Entries.find({"productName": productName}))
+    total_cost = 0
+
+    for item in bom_items:
+        qty = float(item.get("qtyPerUnit", 0))
+        inventory_item = Inventory_Entries.find_one({"itemName": item["itemName"]})
+        item_cost = float(inventory_item.get("costPerUnit", 0)) if inventory_item else 0
+        total_cost += qty * item_cost
+
+    # Update all BOM entries for this product with the total cost
+    BOM_Entries.update_many(
+        {"productName": productName},
+        {"$set": {"costPerUnit": total_cost}}
+    )
+
+    # Optional: also store in productCount collection if needed
+    productCount.update_one(
+        {"name": productName},
+        {"$set": {"costPerUnit": total_cost}},
+        upsert=True
+    )
+
+    return total_cost
 
 # REDIRECT TO LOGIN BY DEFAULT:
 @app.route('/')
@@ -280,7 +324,7 @@ def update_inventory():
             }}
         )
 
-        update_bom_cost_for_item(item_name)
+        update_bom_total_cost(item_name)
 
         if result.matched_count == 0:
             return jsonify({"success": False, "message": "Item not found"}), 404
@@ -419,10 +463,6 @@ def bom():
         bomLevel = request.form.get("bomLevel")
         itemCode = inventory_item["itemCode"] # USES THE ITEM CODE MADE IN INVENTORY
         qtyPerUnit = float(request.form.get("qtyPerUnit"))
-        
-        inventory_cost = float(inventory_item.get("costPerUnit", 0))
-        costPerUnit = qtyPerUnit * inventory_cost
-        
         uom = request.form.get("uom")
         supplier = request.form.get("supplier")
         leadTime = request.form.get("leadTime")
@@ -438,10 +478,12 @@ def bom():
             "uom": uom,
             "supplier": supplier,
             "leadTime": leadTime,
-            "costPerUnit": costPerUnit
+            "costPerUnit": 0 # TEMPORARY
         })
 
-        add_notification("New Item Created!", f"{itemName}[{itemCode}] | {productName}[{productCode}]", "success")
+        total_product_cost = update_bom_total_cost(productName)
+
+        add_notification("BOM Updated!", f"{productName} Total Cost/Unit Updated to {total_product_cost:.2f}", "success")
         return jsonify({"success": True, "message": "BOM Item Added Successfully!"})
     
     bom_entry = list(BOM_Entries.find().sort("number", 1))
