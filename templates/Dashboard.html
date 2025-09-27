@@ -5,8 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-  <script src="{{ url_for('static', filename='js/draft.js') }}" defer></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/Dashboard.css') }}">
+  <script src="{{ url_for('static', filename='js/Dashboard.js') }}" defer></script>
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/Chair.svg') }}">
 </head>
 
@@ -34,7 +34,10 @@
       {% if session.get('role') == 'admin' %}
       <li>
         <a href="{{ url_for('admin') }}">
-          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M160-120q-33 0-56.5-23.5T80-200v-560q0-33 23.5-56.5T160-840h200q33 0 56.5 23.5T440-760v560q0 33-23.5 56.5T360-120H160Zm440 0q-33 0-56.5-23.5T520-200v-560q0-33 23.5-56.5T600-840h200q33 0 56.5 23.5T880-760v560q0 33-23.5 56.5T800-120H600Zm-440-80h200v-560H160v560Zm440 0h200v-560H600v560ZM320-400q0-17-11.5-28.5T280-440h-40q-17 0-28.5 11.5T200-400q0 17 11.5 28.5T240-360h40q17 0 28.5-11.5T320-400Zm440 0q0-17-11.5-28.5T720-440h-40q-17 0-28.5 11.5T640-400q0 17 11.5 28.5T680-360h40q17 0 28.5-11.5T760-400ZM320-520q0-17-11.5-28.5T280-560h-40q-17 0-28.5 11.5T200-520q0 17 11.5 28.5T240-480h40q17 0 28.5-11.5T320-520Zm440 0q0-17-11.5-28.5T720-560h-40q-17 0-28.5 11.5T640-520q0 17 11.5 28.5T680-480h40q17 0 28.5-11.5T760-520ZM320-640q0-17-11.5-28.5T280-680h-40q-17 0-28.5 11.5T200-640q0 17 11.5 28.5T240-600h40q17 0 28.5-11.5T320-640Zm440 0q0-17-11.5-28.5T720-680h-40q-17 0-28.5 11.5T640-640q0 17 11.5 28.5T680-600h40q17 0 28.5-11.5T760-640ZM160-200h200-200Zm440 0h200-200Z"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
+            <path
+              d="M160-120q-33 0-56.5-23.5T80-200v-560q0-33 23.5-56.5T160-840h200q33 0 56.5 23.5T440-760v560q0 33-23.5 56.5T360-120H160Zm440 0q-33 0-56.5-23.5T520-200v-560q0-33 23.5-56.5T600-840h200q33 0 56.5 23.5T880-760v560q0 33-23.5 56.5T800-120H600Zm-440-80h200v-560H160v560Zm440 0h200v-560H600v560ZM320-400q0-17-11.5-28.5T280-440h-40q-17 0-28.5 11.5T200-400q0 17 11.5 28.5T240-360h40q17 0 28.5-11.5T320-400Zm440 0q0-17-11.5-28.5T720-440h-40q-17 0-28.5 11.5T640-400q0 17 11.5 28.5T680-360h40q17 0 28.5-11.5T760-400ZM320-520q0-17-11.5-28.5T280-560h-40q-17 0-28.5 11.5T200-520q0 17 11.5 28.5T240-480h40q17 0 28.5-11.5T320-520Zm440 0q0-17-11.5-28.5T720-560h-40q-17 0-28.5 11.5T640-520q0 17 11.5 28.5T680-480h40q17 0 28.5-11.5T760-520ZM320-640q0-17-11.5-28.5T280-680h-40q-17 0-28.5 11.5T200-640q0 17 11.5 28.5T240-600h40q17 0 28.5-11.5T320-640Zm440 0q0-17-11.5-28.5T720-680h-40q-17 0-28.5 11.5T640-640q0 17 11.5 28.5T680-600h40q17 0 28.5-11.5T760-640ZM160-200h200-200Zm440 0h200-200Z" />
+          </svg>
           <span>Admin</span>
         </a>
       </li>
@@ -115,15 +118,66 @@
             </a>
           </div>
         </div>
-
       </div>
     </div>
 
-    <div class="inventory-section">
-
-
-
-    </div>
+    <div class="grid-layout">
+      <div class="box top-left">
+        <div class="headerBar" id="headerBar">
+          <h2>Recent Notifications</h2><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+            width="24px" fill="#e3e3e3">
+            <path
+              d="M320-480q-17 0-28.5 11.5T280-440v120q0 17 11.5 28.5T320-280q17 0 28.5-11.5T360-320v-120q0-17-11.5-28.5T320-480Zm320-200q-17 0-28.5 11.5T600-640v320q0 17 11.5 28.5T640-280q17 0 28.5-11.5T680-320v-320q0-17-11.5-28.5T640-680ZM480-400q-17 0-28.5 11.5T440-360v40q0 17 11.5 28.5T480-280q17 0 28.5-11.5T520-320v-40q0-17-11.5-28.5T480-400ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Zm280 280q17 0 28.5-11.5T520-520q0-17-11.5-28.5T480-560q-17 0-28.5 11.5T440-520q0 17 11.5 28.5T480-480Z" />
+          </svg>
+        </div>
+        <div class="notifs">
+          {% for notif in recent_notifications %}
+          <div class="notif-item">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3">
+              <path
+                d="M200-200q-17 0-28.5-11.5T160-240q0-17 11.5-28.5T200-280h40v-280q0-83 50-147.5T420-792v-28q0-25 17.5-42.5T480-880q25 0 42.5 17.5T540-820v28q80 20 130 84.5T720-560v280h40q17 0 28.5 11.5T800-240q0 17-11.5 28.5T760-200H200Zm280-300Zm0 420q-33 0-56.5-23.5T400-160h160q0 33-23.5 56.5T480-80ZM320-280h320v-280q0-66-47-113t-113-47q-66 0-113 47t-47 113v280Z" />
+            </svg>
+            <span>{{ notif }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="box top-right">
+        <div class="headerBar" id="headerBar">
+          <h2>Order Summary</h2><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+            width="24px" fill="#e3e3e3">
+            <path
+              d="M320-480q-17 0-28.5 11.5T280-440v120q0 17 11.5 28.5T320-280q17 0 28.5-11.5T360-320v-120q0-17-11.5-28.5T320-480Zm320-200q-17 0-28.5 11.5T600-640v320q0 17 11.5 28.5T640-280q17 0 28.5-11.5T680-320v-320q0-17-11.5-28.5T640-680ZM480-400q-17 0-28.5 11.5T440-360v40q0 17 11.5 28.5T480-280q17 0 28.5-11.5T520-320v-40q0-17-11.5-28.5T480-400ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Zm280 280q17 0 28.5-11.5T520-520q0-17-11.5-28.5T480-560q-17 0-28.5 11.5T440-520q0 17 11.5 28.5T480-480Z" />
+          </svg>
+        </div>
+        <div class="order-summary">
+          <div class="card open-orders">
+            <p class="label">Open Orders</p>
+            <p class="number">{{ open_count }}</p>
+          </div>
+          <div class="card completed">
+            <p class="label">Completed</p>
+            <p class="number">{{ completed_count }}</p>
+          </div>
+          <div class="card in-progress">
+            <p class="label">In Progress</p>
+            <p class="number">{{ in_progress_count }}</p>
+          </div>
+          <div class="card cancelled">
+            <p class="label">Cancelled</p>
+            <p class="number">{{ cancelled_count }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="box bottom">
+        <div class="headerBar" id="headerBar">
+          <h2>Production Schedule Details</h2><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960"
+            width="24px" fill="#e3e3e3">
+            <path
+              d="M320-480q-17 0-28.5 11.5T280-440v120q0 17 11.5 28.5T320-280q17 0 28.5-11.5T360-320v-120q0-17-11.5-28.5T320-480Zm320-200q-17 0-28.5 11.5T600-640v320q0 17 11.5 28.5T640-280q17 0 28.5-11.5T680-320v-320q0-17-11.5-28.5T640-680ZM480-400q-17 0-28.5 11.5T440-360v40q0 17 11.5 28.5T480-280q17 0 28.5-11.5T520-320v-40q0-17-11.5-28.5T480-400ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Zm280 280q17 0 28.5-11.5T520-520q0-17-11.5-28.5T480-560q-17 0-28.5 11.5T440-520q0 17 11.5 28.5T480-480Z" />
+          </svg>
+        </div>
+      </div>
   </main>
 
 </body>

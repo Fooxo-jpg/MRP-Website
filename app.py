@@ -20,7 +20,6 @@ BOM_Entries = db.bom_entry
 Inventory_Entries = db.inventory
 productCount = db.product
 notifications = db.notifications
-user_notifications = db.user_notifications
 purchasedOrders = db.purchasedOrders
 
 def add_notification(title, message, type="info"):
@@ -196,7 +195,28 @@ def logout():
 def Dashboard():
     if 'user' not in session:
         return redirect(url_for('signin'))
-    return render_template('Dashboard.html')
+    
+    # FETCH ALL PURCHASED ORDERS
+    all_orders = list(purchasedOrders.find())
+
+    # COMPUTE COUNT
+    open_count = sum(1 for order in all_orders if order.get("status", "").lower() != "cancelled")
+    completed_count = sum(1 for order in all_orders if order.get("status", "").lower() == "completed")
+    in_progress_count = sum(1 for order in all_orders if order.get("status", "").lower() == "processing")
+    cancelled_count = sum(1 for order in all_orders if order.get("status", "").lower() == "cancelled")
+
+    # FETCH 3 LATEST NOTIFICATIONS
+    recent_notifications_docs = list(notifications.find().sort("timestamp", -1).limit(3))
+    recent_notifications = [f"{n['title']}: {n['message']}" for n in recent_notifications_docs]
+
+    return render_template(
+        'Dashboard.html',
+        open_count=open_count,
+        completed_count=completed_count,
+        in_progress_count=in_progress_count,
+        cancelled_count=cancelled_count,
+        recent_notifications=recent_notifications
+    )
 
 @app.route('/admin')
 def admin():
@@ -281,7 +301,7 @@ def inventory_page():
             "leadTime": leadTime,
         })
 
-        add_notification("New Item Created!", f"{itemName}[{itemCode}]", "success")
+        add_notification("NEW Item Created", f"{itemName}[{itemCode}]", "success")
         return redirect(url_for("Inventory"))
     
     inventory_entries = list(Inventory_Entries.find().sort("itemCode", 1))
@@ -416,7 +436,6 @@ def export_csv_inv():
     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
     return response
 
-# NOTIFICATION / ACTIVITY LOG SECTION
 @app.route('/activity')
 def activity():
     if 'user' not in session:
@@ -483,7 +502,7 @@ def bom():
 
         total_product_cost = update_bom_total_cost(productName)
 
-        add_notification("BOM Updated!", f"{productName} Total Cost/Unit Updated to {total_product_cost:.2f}", "success")
+        add_notification("BOM Updated", f"{productName} Total Cost/Unit Updated to {total_product_cost:.2f}", "success")
         return jsonify({"success": True, "message": "BOM Item Added Successfully!"})
     
     bom_entry = list(BOM_Entries.find().sort("number", 1))
