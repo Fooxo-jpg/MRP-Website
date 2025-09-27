@@ -147,6 +147,18 @@ def admin():
         return redirect(url_for('signin'))
     return render_template('admin.html')
 
+@app.route('/Production')
+def production():
+    if 'user' not in session:
+        return redirect(url_for('signin'))
+    return render_template('Production.html')
+
+@app.route('/Purchased')
+def purchased():
+    if 'user' not in session:
+        return redirect(url_for('signin'))
+    return render_template('Purchased.html')
+
 # INVENTORY 
 @app.route('/Inventory', methods=["GET", "POST"])
 def Inventory():
