@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # === DATABASE CONNECTION ===
 client = MongoClient("mongodb+srv://Fooxo:2025174371@mrp-database.qopzsma.mongodb.net/")
@@ -33,9 +33,20 @@ def get_unit_price(product_name): # GET UNIT PRICE OF A PRODUCT FROM BOM
         return float(bom_item.get("costPerUnit", 0))
     return None
 
+def get_lead_time(product_name):
+    bom_item = BOM_Entries.find_one({"productName": {"$regex": f"^{product_name}$", "$options": "i"}})
+    if bom_item:
+        return float(bom_item.get("leadTime", 0))
+    return 0
 
 def calculate_total_cost(unit_price, qty_ordered):
     return unit_price * qty_ordered
+
+def calculate_estimated_delivery(order_date_str, lead_time, qty_ordered):
+    order_date = datetime.strptime(order_date_str, "%Y-%m-%d")
+    est_days = (lead_time * qty_ordered) / 2
+    est_date = order_date + timedelta(days=est_days)
+    return est_date.strftime("%Y-%m-%d")
 
 def add_notification(title, message, type="info"):
     Notifications.insert_one({
@@ -87,7 +98,7 @@ if __name__ == "__main__":
         else:
             product_name = user_input
 
-    # Ask for quantity
+    # ASK FOR QUANTITY
     while True:
         try:
             qty = float(input("Enter Quantity: "))
@@ -103,10 +114,14 @@ if __name__ == "__main__":
     order_date = get_order_date()
     total_cost = calculate_total_cost(unit_price, qty)
 
+    lead_time = get_lead_time(product_name)
+    estimated_delivery = calculate_estimated_delivery(order_date, lead_time, qty)
+
     # Save into DB
     PurchaseOrders.insert_one({
         "poNumber": po_number,
         "orderDate": order_date,
+        "estimateDelivery": estimated_delivery,
         "productName": product_name,
         "quantityOrdered": qty,
         "unitPrice": unit_price,
@@ -122,6 +137,7 @@ if __name__ == "__main__":
     print("\n✅ Purchase Order Created Successfully!")
     print(f"PO Number : {po_number}")
     print(f"Order Date: {order_date}")
+    print(f"Est Delivery: {estimated_delivery}")
     print(f"Product   : {product_name}")
     print(f"Quantity  : {qty}")
     print(f"Unit Price: {unit_price}")

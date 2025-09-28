@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, Response, jsonify, flash
 from pymongo import MongoClient
-from datetime import datetime
+from datetime import datetime, timedelta
 from bson import ObjectId
 import csv
 import time
@@ -163,6 +163,45 @@ def update_bom_total_cost(productName):
 
     return total_cost
 
+# COMPUTE THE LEAD TIME OF A PRODUCT, AS THE MAX LEAD TIME of all BOM ITEMS
+def update_product_lead_time(productName):
+    bom_items = list(BOM_Entries.find({"productName": productName}))
+    
+    max_lead_time = 0
+    for item in bom_items:
+        inventory_item = Inventory_Entries.find_one({"itemName": item["itemName"]})
+        if inventory_item:
+            item_lead = float(inventory_item.get("leadTime", 0))
+            max_lead_time = max(max_lead_time, item_lead)
+
+    # Update all BOM entries for this product
+    BOM_Entries.update_many(
+        {"productName": productName},
+        {"$set": {"leadTime": max_lead_time}}
+    )
+
+    # Optionally update productCount collection too
+    productCount.update_one(
+        {"name": productName},
+        {"$set": {"leadTime": max_lead_time}},
+        upsert=True
+    )
+
+    return max_lead_time
+
+# NUMBER VALIDATION:
+def validate_int(value, default=0):
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return default
+
+def validate_float(value, default=0.0):
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default
+
 # REDIRECT TO LOGIN BY DEFAULT:
 @app.route('/')
 def home():
@@ -197,7 +236,7 @@ def Dashboard():
         return redirect(url_for('signin'))
     
     # FETCH ALL PURCHASED ORDERS
-    all_orders = list(purchasedOrders.find())
+    all_orders = list(purchasedOrders.find().sort("orderDate", -1))
 
     # COMPUTE COUNT
     open_count = sum(1 for order in all_orders if order.get("status", "").lower() != "cancelled")
@@ -215,7 +254,8 @@ def Dashboard():
         completed_count=completed_count,
         in_progress_count=in_progress_count,
         cancelled_count=cancelled_count,
-        recent_notifications=recent_notifications
+        recent_notifications=recent_notifications,
+        purchased_orders=all_orders
     )
 
 @app.route('/admin')
@@ -237,6 +277,39 @@ def purchased_page():
         return redirect(url_for('signin'))
     
     purchased_entries = list(purchasedOrders.find().sort("orderDate", -1))
+    
+    for entry in purchased_entries:
+        product_name = entry.get("productName")
+        quantity_ordered = float(entry.get("quantityOrdered", 0))
+        order_date_str = entry.get("orderDate")
+
+        # GETS ORDER DATE AS DATETIME
+        try:
+            order_date = datetime.strptime(order_date_str, "%Y-%m-%d")
+        except:
+            order_date = datetime.now()
+
+        # GET LEAD TIME FROM PRODUCT COLLECTION
+        product = productCount.find_one({"name": product_name})
+        lead_time = float(product.get("leadTime", 0)) if product else 0
+
+        # CALCULATE EST DELIVERY
+        est_days = lead_time * quantity_ordered / 2
+        est_delivery_date = order_date + timedelta(days=est_days)
+
+        #  FORMAT AS STRING
+        est_delivery_str = est_delivery_date.strftime("%Y-%m-%d")
+
+        # UPDATE ENTRY IN DB
+        purchasedOrders.update_one(
+            {"_id": entry["_id"]},
+            {"$set": {"estimatedDelivery": est_delivery_str}}
+        )
+
+        # UPDATE LOCAL COPY FOR RENDERING
+        entry["estimatedDelivery"] = est_delivery_str
+
+    
     return render_template(
         "Purchased.html",
         entries=purchased_entries,
@@ -278,13 +351,16 @@ def inventory_page():
         itemCode = generate_part_id(itemName)
         category = request.form.get("category")
         uom = request.form.get("uom")
-        currentStock = int(request.form.get("currentStock") or 0)
-        reorderLvl = int(request.form.get("reorderLevel") or 0)
-        reorderQty = int(request.form.get("reorderQty") or 0)
-        costPerUnit = int(request.form.get("costPerUnit") or 0)
+        
+        currentStock = validate_int(request.form.get("currentStock") or 0)
+        reorderLvl = validate_int(request.form.get("reorderLevel") or 0)
+        reorderQty = validate_int(request.form.get("reorderQty") or 0)
+        costPerUnit = validate_float(request.form.get("costPerUnit") or 0)
+        
         totalValue = calculate_total_value(currentStock, costPerUnit)
         supplier = request.form.get("supplier")
-        leadTime = int(request.form.get("leadTime") or 0)
+        
+        leadTime = validate_int(request.form.get("leadTime") or 0)
 
         #put into mongoDB
         Inventory_Entries.insert_one({
@@ -325,7 +401,10 @@ def update_inventory():
         
         item_name = data.get("name")
         new_item_code = generate_part_id(item_name)
-        total_value = calculate_total_value(data.get("currentStock"), data.get("costPerUnit"))
+        current_stock = validate_float(data.get("currentStock"))
+        cost_per_unit = validate_float(data.get("costPerUnit"))
+        total_value = calculate_total_value(current_stock, cost_per_unit)
+
 
         result = Inventory_Entries.update_one(
             {"_id": ObjectId(item_id)},
@@ -345,6 +424,9 @@ def update_inventory():
         )
 
         update_bom_total_cost(item_name)
+        affected_products = BOM_Entries.find({"itemName": item_name})
+        for prod in affected_products:
+            update_product_lead_time(prod["productName"])
 
         if result.matched_count == 0:
             return jsonify({"success": False, "message": "Item not found"}), 404
@@ -481,10 +563,12 @@ def bom():
         productCode = generate_product_code(productName)
         bomLevel = request.form.get("bomLevel")
         itemCode = inventory_item["itemCode"] # USES THE ITEM CODE MADE IN INVENTORY
-        qtyPerUnit = float(request.form.get("qtyPerUnit"))
+        qtyPerUnit = validate_float(request.form.get("qtyPerUnit"))
+        if qtyPerUnit <= 0:
+            return jsonify({"success": False, "message": "Quantity per unit must be positive."})
+
         uom = request.form.get("uom")
         supplier = request.form.get("supplier")
-        leadTime = request.form.get("leadTime")
 
         #put into mongoDB
         BOM_Entries.insert_one({
@@ -496,13 +580,14 @@ def bom():
             "qtyPerUnit": qtyPerUnit,
             "uom": uom,
             "supplier": supplier,
-            "leadTime": leadTime,
+            "leadTime": 0,
             "costPerUnit": 0 # TEMPORARY
         })
 
         total_product_cost = update_bom_total_cost(productName)
+        product_lead_time = update_product_lead_time(productName)
 
-        add_notification("BOM Updated", f"{productName} Total Cost/Unit Updated to {total_product_cost:.2f}", "success")
+        add_notification("BOM Updated", f"{productName} Total Cost/Unit Updated to {total_product_cost:.2f} and Lead Time set to {product_lead_time} days", "success")
         return jsonify({"success": True, "message": "BOM Item Added Successfully!"})
     
     bom_entry = list(BOM_Entries.find().sort("number", 1))
@@ -575,6 +660,7 @@ def import_csv():
         imported_count = 0
         duplicate_logs = []
         seen = set()
+        imported_products = set() # TO TRACK WHICH PRODUCTS TO UPDATE TOTALS/LEAD TIME
 
         header_map = {
             "PRODUCT CODE": "productCode",
@@ -614,11 +700,11 @@ def import_csv():
                 "bomLevel": row.get("BOM LEVEL", "").strip(),
                 "itemCode": itemCode,
                 "itemName": itemName,
-                "qtyPerUnit": float(row.get("QTY PER UNIT", 0) or 0),
+                "qtyPerUnit": validate_float(row.get("QTY PER UNIT", 0)),
                 "uom": row.get("UOM", "").strip(),
                 "supplier": row.get("SUPPLIER", "").strip(),
-                "leadTime": float(row.get("LEAD TIME", 0) or 0),
-                "costPerUnit": float(row.get("COST/UNIT", 0) or 0)
+                "leadTime": validate_float(row.get("LEAD TIME", 0)),
+                "costPerUnit": validate_float(row.get("COST/UNIT", 0))
             }
 
             key = (doc["productCode"], doc["itemCode"])
@@ -632,6 +718,17 @@ def import_csv():
 
             BOM_Entries.insert_one(doc)
             imported_count += 1
+            imported_products.add(productName) # TRACK PRODUCTS FOR UPDATE
+
+        # AFTER IMPORT, UPDATE TOTAL COST AND LEAD TIME FOR IMPORTED PRODUCTS
+        for product_name in imported_products:
+            total_cost = update_bom_total_cost(product_name)
+            lead_time = update_product_lead_time(product_name)
+            add_notification(
+                "BOM Updated via Import",
+                f"{product_name} Total Cost/Unit set to {total_cost:.2f}, Lead Time set to {lead_time} days",
+                "success"
+            )
 
         message = f"Imported {imported_count} items"
         if duplicate_logs:

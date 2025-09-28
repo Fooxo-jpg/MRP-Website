@@ -157,14 +157,7 @@
               <td>{{ entry.quantityOrdered }}</td>
               <td>$ {{ "%.2f"|format(entry.unitPrice) }}</td>
               <td>$ {{ "%.2f"|format(entry.totalCost) }}</td>
-              <td>
-                <select class="status-dropdown">
-                  <option value="Pending">Pending</option>
-                  <option value="Processing">Processing</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Cancelled">Cancelled</option>
-                </select>
-              </td>
+              <td>{{ entry.status }}</td>
               <td>{{ entry.receivedQuantity }}</td>
               <td>{{ entry.outstandingQuantity }}</td>
               <td>

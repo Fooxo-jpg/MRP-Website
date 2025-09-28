@@ -453,6 +453,7 @@ button svg:hover {
   font-weight: 800;
   font-size: 0.8em;
 }
+
 /* =========================
    Profile Dropdown
 ========================= */
@@ -531,7 +532,7 @@ button svg:hover {
   background-color: white;
   border-radius: 0.6em;
   padding: 1.5em;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .order-summary {
@@ -546,7 +547,7 @@ button svg:hover {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   font-family: 'Poppins', sans-serif;
 }
 
@@ -582,28 +583,128 @@ button svg:hover {
 
 /* RECENT NOTIFICATIONS - TOP LEFT BOX*/
 .notifs {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
 }
 
 .notif-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: var(--base-clr);
-    padding: 8px 12px;
-    border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--base-clr);
+  padding: 8px 12px;
+  border-radius: 8px;
 
-  > svg {
+  >svg {
     fill: var(--accent-clr);
   }
 }
 
 /* Background colors matching your screenshot */
-.open-orders { background-color: #d6d9f0; }       /* light blue */
-.completed { background-color: #d7e2d9; }         /* light green */
-.in-progress { background-color: #e3ded4; }       /* light beige */
-.cancelled { background-color: #f0d7d9; }           /* light red/pink */
+.open-orders {
+  background-color: #d6d9f0;
+}
 
+/* light blue */
+.completed {
+  background-color: #d7e2d9;
+}
+
+/* light green */
+.in-progress {
+  background-color: #e3ded4;
+}
+
+/* light beige */
+.cancelled {
+  background-color: #f0d7d9;
+}
+
+/* light red/pink */
+
+.bottom-box {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.top-boxes {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.top-box {
+  flex: 1;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 15px;
+  background-color: #fafafa;
+}
+
+.top-box h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.top-box .big-text {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.top-box .small-text {
+  font-size: 14px;
+  font-weight: 400;
+  color: #666;
+}
+
+/* Table styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+}
+
+table th,
+table td {
+  padding: 10px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+
+table th {
+  background-color: #eee;
+}
+
+/* Progress Bar Container */
+progress {
+  width: 100%;
+  height: 18px;
+  -webkit-appearance: none; /* Remove default style for Safari */
+  appearance: none;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #eee;
+}
+
+progress::-webkit-progress-bar {
+  background-color: #eee;
+  border-radius: 6px;
+}
+
+progress::-webkit-progress-value {
+  background-color: #b27c50; /* Your accent color */
+  border-radius: 6px;
+}
+
+progress::-moz-progress-bar {
+  background-color: #b27c50;
+  border-radius: 6px;
+}
