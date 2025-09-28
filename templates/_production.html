@@ -1,0 +1,25 @@
+<div class="product-request">
+    <!-- Title -->
+    <h3 class="product-title">Low Stock Alert: {{ item.itemName}}</h3>
+
+    <!-- Table -->
+    <table class="product-table">
+        <tr>
+            <td>Item Code: {{ item.itemCode }}</td>
+            <td>Supplier: {{ item.supplier }}</td>
+        </tr>
+        <tr>
+            <td>Current Stock: {{ item.currentStock|int or 0 }}</td>
+            <td>Cost Per Unit: {{ item.costPerUnit or 0 }}</td>
+        </tr>
+        <tr>
+            <td>Reorder QTY: {{ item.reorderQty or 0 }}</td>
+            <td>Total Cost: {{ (item.currentStock or 0) * (item.costPerUnit or 0) }}</td>
+        </tr>
+    </table>
+
+    <!-- Actions at bottom right -->
+    <div class="product-actions">
+        <button class="place-order-btn">Place Order</button>
+    </div>
+</div>

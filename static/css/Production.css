@@ -326,3 +326,64 @@ button svg:hover {
 .profile-menu a:hover>svg {
   fill: var(--accent-clr);
 }
+
+/* Product Request Card */
+
+.product-request {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+/* Table layout */
+.product-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.product-table td {
+  padding: 0.25rem 0.5rem;
+  vertical-align: top;
+  font-size: 0.875rem;
+  color: #374151;
+  /* gray-700 */
+}
+
+.product-table tr td:first-child {
+  font-weight: 500;
+}
+
+/* Buttons at bottom right */
+.product-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.place-order-btn {
+  background-color: var(--accent-clr);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+}
+
+.place-order-btn:hover {
+  background-color: #8b5c36;
+}

@@ -1,4 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const evtSource = new EventSource("/stream");
+  evtSource.onmessage = function (event) {
+    const data = JSON.parse(event.data);
+    const notificationsContainer = document.getElementById("notifications-container");
+    if (notificationsContainer) {
+      notificationsContainer.insertAdjacentHTML("afterbegin", data.html);
+    }
+  };
   // =========================
   // Sidebar Navigation
   // =========================

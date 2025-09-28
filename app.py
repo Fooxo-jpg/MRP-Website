@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, Response, jsonify, flash
+from flask import Flask, render_template, request, redirect, url_for, session, Response, jsonify, flash, stream_with_context
 from pymongo import MongoClient
 from datetime import datetime, timedelta
 from bson import ObjectId
@@ -201,6 +201,43 @@ def validate_float(value, default=0.0):
         return float(value)
     except (ValueError, TypeError):
         return default
+    
+def check_stock_notifications(item_name, current_stock, reorder_level):
+    """
+    Sends low stock or reorder reminder notifications,
+    but avoids duplicates for the same item and alert type.
+    """
+    # Determine alert type
+    if current_stock < reorder_level:
+        notif_type = "error"
+        title = f"Low Stock Alert: {item_name}"
+        message = f"Current Stock: {current_stock}, Below minimum threshold of {reorder_level}"
+    elif current_stock <= reorder_level * 1.2:  # approaching threshold
+        notif_type = "warning"
+        title = f"Reorder Reminder: {item_name}"
+        message = f"Current Stock: {current_stock} (approaching minimum threshold of {reorder_level})"
+    else:
+        # Stock is sufficient, remove any previous low-stock notifications for this item
+        notifications.delete_many({
+            "itemName": item_name,
+            "type": {"$in": ["error", "warning"]}
+        })
+        return
+
+    # Check if a notification of the same type already exists
+    exists = notifications.find_one({
+        "itemName": item_name,
+        "type": notif_type,
+        "message": message
+    })
+
+    if not exists:
+        add_notification(title, message, notif_type)
+        # Store the item name in the notification for easier tracking
+        notifications.update_one(
+            {"_id": notifications.find().sort("_id", -1).limit(1)[0]["_id"]},
+            {"$set": {"itemName": item_name}}
+        )
 
 # REDIRECT TO LOGIN BY DEFAULT:
 @app.route('/')
@@ -240,7 +277,6 @@ def Dashboard():
 
     # DATA FOR TOP BOXES
     today = datetime.now().date()
-    start_of_week = today
     end_of_week = today + timedelta(days=6)
 
     today_orders = [
@@ -295,11 +331,56 @@ def admin():
         return redirect(url_for('signin'))
     return render_template('admin.html')
 
+# PRODUCTION
 @app.route('/Production')
 def production():
     if 'user' not in session:
         return redirect(url_for('signin'))
-    return render_template('Production.html')
+    
+    # GET ALL INVENTORY ITEMS BELOW THEIR REORDER LEVEL
+    low_stock_items = list(Inventory_Entries.find({
+        "$expr": {"$lt": ["$currentStock", "$reorderLevel"]} # ALLOWS COMPARING TWO FIELDS
+    }))
+    
+    return render_template('Production.html', items=low_stock_items)
+
+@app.route("/place-order", methods=["POST"])
+def place_order():
+    if 'user' not in session:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+
+    try:
+        data = request.get_json()
+        item_id = data.get("_id")
+
+        if not item_id:
+            return jsonify({"success": False, "message": "Missing item ID"}), 400
+
+        # FIND THE ITEM
+        item = Inventory_Entries.find_one({"_id": ObjectId(item_id)})
+        if not item:
+            return jsonify({"success": False, "message": "Item not found"}), 404
+
+        # ADD THE REORDERED QUANTITY TO CURRENT STOCK
+        reorder_qty = validate_int(item.get("reorderQty", 0))
+        new_stock = validate_int(item.get("currentStock", 0)) + reorder_qty
+
+        Inventory_Entries.update_one(
+            {"_id": ObjectId(item_id)},
+            {"$set": {"currentStock": new_stock}}
+        )
+
+        # ADD NOTIFICATION
+        add_notification(
+            "Order Placed",
+            f"{reorder_qty} units added to {item['itemName']} stock",
+            "success"
+        )
+
+        return jsonify({"success": True, "newStock": new_stock})
+    
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
 
 # PURCHASED
 @app.route('/Purchased')
@@ -455,6 +536,8 @@ def inventory_page():
             "leadTime": leadTime,
         })
 
+        check_stock_notifications(itemName, currentStock, reorderLvl)
+
         add_notification("NEW Item Created", f"{itemName}[{itemCode}]", "success")
         return redirect(url_for("Inventory"))
     
@@ -500,6 +583,8 @@ def update_inventory():
                 "leadTime": data.get("leadTime")
             }}
         )
+
+        check_stock_notifications(item_name, current_stock, validate_int(data.get("reorderLevel")))
 
         update_bom_total_cost(item_name)
         affected_products = BOM_Entries.find({"itemName": item_name})
@@ -603,23 +688,51 @@ def activity():
     logs = list(notifications.find().sort("_id", -1))
     return render_template('activity.html', logs=logs)
 
+from flask import stream_with_context
+from bson import ObjectId
+
 @app.route('/stream')
 def stream():
+    @stream_with_context
     def event_stream():
         last_id = None
         while True:
-            time.sleep(2)  # check every 2s (can be tuned down)
-            
-            query = {}
-            if last_id:
-                query = {"_id": {"$gt": ObjectId(last_id)}}
-            
-            new_logs = list(notifications.find(query).sort("_id", 1))  # oldest first
-            if new_logs:
-                for log in new_logs:
-                    html = render_template('_single_notification.html', log=log)
-                    yield f"data: {json.dumps({'html': html})}\n\n"
-                    last_id = str(log["_id"])
+            try:
+                time.sleep(2)  # CHECK EVERY 2 SECONDS
+                query = {}
+                if last_id:
+                    query = {"_id": {"$gt": ObjectId(last_id)}}
+
+                new_logs = list(notifications.find(query).sort("_id", 1))
+                if new_logs:
+                    for log in new_logs:
+                        # SHALLOW COPY: NORMALIZE FIELDS THAT CAN BREAK RENDER
+                        safe_log = dict(log)
+                        # CONVERT OBJECTID AND TIMESTAMP TO STRINGS
+                        try:
+                            safe_log["_id"] = str(safe_log.get("_id"))
+                        except Exception:
+                            safe_log["_id"] = str(safe_log.get("_id", ""))
+                        # STRINGY IF TIMESTAMP IS DATETIME OR OTHER
+                        ts = safe_log.get("timestamp")
+                        if ts is not None:
+                            try:
+                                safe_log["timestamp"] = str(ts)
+                            except Exception:
+                                safe_log["timestamp"] = ts
+
+                        # RENDER NOTIFICATION TEMPLATE
+                        html = render_template('_single_notification.html', log=safe_log)
+                        yield f"data: {json.dumps({'html': html})}\n\n"
+                        last_id = str(log["_id"])
+            except Exception as e:
+                print("Error in event_stream:", repr(e))
+                # YIELD A MINIMAL NON-BREAKING EVENT SO CLIENT'S EVENTSOURCE CONTINUES
+                fallback_html = f"<div class='notification error'>Notification render error: {str(e)}</div>"
+                yield f"data: {json.dumps({'html': fallback_html})}\n\n"
+                # SMALL SLEEP TO AVOID TIGHT EXCEPTION LOOP
+                time.sleep(2)
+
     return Response(event_stream(), mimetype="text/event-stream")
 
 # BOM SECTION
@@ -665,7 +778,7 @@ def bom():
         total_product_cost = update_bom_total_cost(productName)
         product_lead_time = update_product_lead_time(productName)
 
-        add_notification("BOM Updated", f"{productName} Total Cost/Unit Updated to {total_product_cost:.2f} and Lead Time set to {product_lead_time} days", "success")
+        add_notification("BOM Updated", f"{productName} Total Cost/Unit Updated to ${total_product_cost:.2f} and Lead Time set to {product_lead_time} days", "success")
         return jsonify({"success": True, "message": "BOM Item Added Successfully!"})
     
     bom_entry = list(BOM_Entries.find().sort("number", 1))
