@@ -238,6 +238,31 @@ def Dashboard():
     # FETCH ALL PURCHASED ORDERS
     all_orders = list(purchasedOrders.find().sort("orderDate", -1))
 
+    # DATA FOR TOP BOXES
+    today = datetime.now().date()
+    start_of_week = today
+    end_of_week = today + timedelta(days=6)
+
+    today_orders = [
+        o for o in all_orders
+        if datetime.strptime(o.get("orderDate", ""), "%Y-%m-%d").date() == today
+    ]
+    today_count = len(today_orders)
+    today_total_qty = sum(float(o.get("quantityOrdered", 0)) for o in today_orders)
+
+    # This Week
+    week_orders = [
+        o for o in all_orders
+        if today <= datetime.strptime(o.get("orderDate", ""), "%Y-%m-%d").date() <= end_of_week
+    ]
+    week_count = len(week_orders)
+    week_total_qty = sum(float(o.get("quantityOrdered", 0)) for o in week_orders)
+
+    produced_orders = [
+    o for o in all_orders if float(o.get("receivedQuantity", 0)) > 0 and o.get("status", "").lower() != "cancelled"
+    ]
+    total_units_produced = sum(float(o.get("receivedQuantity", 0)) for o in produced_orders)
+
     # COMPUTE COUNT
     open_count = sum(1 for order in all_orders if order.get("status", "").lower() != "cancelled")
     completed_count = sum(1 for order in all_orders if order.get("status", "").lower() == "completed")
@@ -255,7 +280,13 @@ def Dashboard():
         in_progress_count=in_progress_count,
         cancelled_count=cancelled_count,
         recent_notifications=recent_notifications,
-        purchased_orders=all_orders
+        purchased_orders=all_orders,
+        # top boxes data
+        today_count=today_count,
+        today_total_qty=today_total_qty,
+        week_count=week_count,
+        week_total_qty=week_total_qty,
+        total_units_produced=total_units_produced
     )
 
 @app.route('/admin')
@@ -315,6 +346,53 @@ def purchased_page():
         entries=purchased_entries,
         has_data=len(purchased_entries) > 0
     )
+
+@app.route("/update-purchased", methods=["POST"])
+def update_purchased():
+    if 'user' not in session:
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+
+    data = request.get_json()
+    order_id = data.get("_id")
+    received_qty = validate_int(data.get("receivedQuantity", 0))
+    status = data.get("status", "Pending")
+
+    if not order_id:
+        return jsonify({"success": False, "message": "Missing order ID"}), 400
+
+    order = purchasedOrders.find_one({"_id": ObjectId(order_id)})
+    if not order:
+        return jsonify({"success": False, "message": "Order not found"}), 404
+    
+    quantity_ordered = validate_int(order.get("quantityOrdered", 0))
+    outstanding_qty = max(quantity_ordered - received_qty, 0)
+
+    if status != "Cancelled":
+        if received_qty >= quantity_ordered:
+            status = "Completed"
+        elif 0 < received_qty < quantity_ordered:
+            status = "Processing"  # optionally "Pending" if you prefer
+        else:
+            status = "Pending"
+
+    result = purchasedOrders.update_one(
+        {"_id": ObjectId(order_id)},
+        {"$set": {
+            "receivedQuantity": received_qty,
+            "status": status,
+            "outstandingQuantity": outstanding_qty
+        }}
+    )
+
+    if result.matched_count == 0:
+        return jsonify({"success": False, "message": "Order not found"}), 404
+
+    return jsonify({
+        "success": True,
+        "receivedQuantity": received_qty,
+        "status": status,
+        "outstandingQuantity": outstanding_qty
+    })
 
 @app.route('/get_bom_items/<productName>')
 def get_bom_items(productName):

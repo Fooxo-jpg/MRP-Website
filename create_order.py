@@ -132,7 +132,7 @@ if __name__ == "__main__":
     })
 
     update_inventory_for_order(product_name, qty)
-    add_notification(f"New Order Received {po_number}", f"Order: {qty}[{product_name}] for {total_cost}", "success")
+    add_notification(f"New Order Received {po_number}", f"Order: [{product_name}] - {qty}x for ${total_cost}", "success")
 
     print("\n✅ Purchase Order Created Successfully!")
     print(f"PO Number : {po_number}")

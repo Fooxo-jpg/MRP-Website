@@ -596,3 +596,55 @@ button svg:hover {
 .status-dropdown option[value="Cancelled"] {
   color: #c55560;
 }
+
+.styled-dropdown {
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 0.9rem;
+  background-color: #fff;
+  color: #333;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.3em;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+}
+
+#save-btn-styled {
+  padding: 0.3em 0.8em;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid var(--accent-clr);
+  border-radius: 0.5em;
+  background: transparent;
+  color: var(--accent-clr);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+#cancel-btn-styled {
+  padding: 0.3em 0.8em;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid var(--accent-clr);
+  border-radius: 0.5em;
+  background: transparent;
+  color: var(--accent-clr);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+#save-btn-styled:hover {
+  background-color: #7fb38a;
+  border: 1px solid #7fb38a;
+  color: white;
+}
+
+#cancel-btn-styled:hover {
+  background-color: #f3bebe;
+  border: 1px solid #f3bebe;
+  color: white;
+}
