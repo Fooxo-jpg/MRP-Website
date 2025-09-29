@@ -238,7 +238,7 @@
               </td>
               <td>{{ entry.reorderLevel|int }}</td>
               <td>{{ entry.reorderQty|int }}</td>
-              <td>$ {{ "%.2f"|format(entry.costPerUnit) }}</td>
+              <td>$ {{ "%.2f"|format(entry.costPerUnit|float) }}</td>
               <td>$ {{ "%.2f"|format(entry.totalValue) }}</td>
               <td>{{ entry.supplier }}</td>
               <td>{{ entry.leadTime|int }} Days</td>

@@ -60,35 +60,22 @@ document.addEventListener("DOMContentLoaded", () => {
   // STOCK
   // -------------------------
 
-  const buttons = document.querySelectorAll(".place-order-btn");
+  document.querySelectorAll(".place-order-btn").forEach(button => {
+    button.addEventListener("click", async (e) => {
+      const itemCode = e.target.closest(".product-request")
+        .querySelector("td").innerText.split(": ")[1];
 
-  buttons.forEach(btn => {
-    btn.addEventListener("click", async (e) => {
-      const productDiv = e.target.closest(".product-request");
-      const itemId = productDiv.querySelector(".delete-btn").dataset.id;
+      const response = await fetch("/place_order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemCode })
+      });
 
-      try {
-        const response = await fetch("/place-order", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ _id: itemId }),
-        });
-
-        const result = await response.json();
-        if (result.success) {
-          // Remove the item row from DOM
-          productDiv.remove();
-
-          // Optional: show a success alert
-          alert(`Order placed! New stock: ${result.newStock}`);
-        } else {
-          alert(`Error: ${result.message}`);
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Failed to place order.");
+      if (response.ok) {
+        alert("Production order placed!");
+        location.reload();
+      } else {
+        alert("Error placing order.");
       }
     });
   });

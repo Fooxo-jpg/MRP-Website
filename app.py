@@ -363,17 +363,25 @@ def place_order():
 
         # ADD THE REORDERED QUANTITY TO CURRENT STOCK
         reorder_qty = validate_int(item.get("reorderQty", 0))
-        new_stock = validate_int(item.get("currentStock", 0)) + reorder_qty
+        current_stock = validate_int(item.get("currentStock", 0)) + reorder_qty
+        cost_per_unit = validate_float(item.get("costPerUnit", 0))
+
+        new_stock = current_stock + reorder_qty
+        total_cost = cost_per_unit * reorder_qty
 
         Inventory_Entries.update_one(
             {"_id": ObjectId(item_id)},
-            {"$set": {"currentStock": new_stock}}
+            {"$set": {
+                "currentStock": new_stock,
+                "totalValue": new_stock * cost_per_unit  # keep consistency
+            }}
         )
 
         # ADD NOTIFICATION
         add_notification(
             "Order Placed",
-            f"{reorder_qty} units added to {item['itemName']} stock",
+            f"{reorder_qty} units of {item['itemName']} ordered "
+            f"at ${cost_per_unit:.2f}/unit. Total Cost: ${total_cost:.2f}",
             "success"
         )
 
@@ -537,9 +545,8 @@ def inventory_page():
         })
 
         check_stock_notifications(itemName, currentStock, reorderLvl)
-
         add_notification("NEW Item Created", f"{itemName}[{itemCode}]", "success")
-        return redirect(url_for("Inventory"))
+        return redirect(url_for("inventory_page"))
     
     inventory_entries = list(Inventory_Entries.find().sort("itemCode", 1))
     return render_template(
