@@ -60,24 +60,60 @@ document.addEventListener("DOMContentLoaded", () => {
   // STOCK
   // -------------------------
 
-  document.querySelectorAll(".place-order-btn").forEach(button => {
-    button.addEventListener("click", async (e) => {
-      const itemCode = e.target.closest(".product-request")
-        .querySelector("td").innerText.split(": ")[1];
+  // -------------------------
+  // Update Summary Box live
+  // -------------------------
+  document.querySelectorAll(".product-request").forEach(productDiv => {
+    const stockEl = productDiv.querySelector(".current-stock");
+    const reorderEl = productDiv.querySelector(".base-reorder");
+    const newStockEl = productDiv.querySelector(".new-stock");
+    const multiplierInput = productDiv.querySelector(".order-input");
+    const orderBtn = productDiv.querySelector(".order-btn");
 
-      const response = await fetch("/place_order", {
+    if (multiplierInput) {
+      multiplierInput.addEventListener("input", () => {
+        const multiplier = parseInt(multiplierInput.value) || 1;
+        const baseReorder = parseInt(reorderEl.textContent) || 0;
+        const currentStock = parseInt(stockEl.textContent) || 0;
+
+        // Calculate live values
+        const finalQty = baseReorder * multiplier;
+        const projectedStock = currentStock + finalQty;
+
+        // Update summary block
+        newStockEl.textContent = projectedStock;
+        productDiv.querySelector(".summary-reorder").textContent = finalQty;
+      });
+    }
+
+
+    orderBtn.addEventListener("click", () => {
+      const multiplier = parseInt(multiplierInput.value) || 1;
+      const itemId = productDiv.dataset.id;  // ✅ store ObjectId in data-id in your HTML
+
+      fetch("/place-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemCode })
-      });
+        body: JSON.stringify({
+          _id: itemId,
+          multiplier: multiplier
+        })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            stockEl.textContent = data.newStock;
+            newStockEl.textContent = data.newStock;
+            alert(`✅ Ordered ${data.orderedQty} units. Total cost: $${data.totalCost.toFixed(2)}`);
 
-      if (response.ok) {
-        alert("Production order placed!");
-        location.reload();
-      } else {
-        alert("Error placing order.");
-      }
+            productDiv.remove();
+          } else {
+            alert(`❌ Error: ${data.message}`);
+          }
+        })
+        .catch(err => console.error("Fetch error:", err));
     });
   });
+
 
 });

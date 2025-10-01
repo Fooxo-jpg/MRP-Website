@@ -569,7 +569,6 @@ button svg:hover {
 }
 #createForm .create-btn {
   grid-column: span 2;
-  padding: 0.8rem 1.2rem;
   background: #007bff;
   color: #fff;
   border: none;

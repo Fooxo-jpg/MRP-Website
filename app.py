@@ -352,6 +352,7 @@ def place_order():
     try:
         data = request.get_json()
         item_id = data.get("_id")
+        multiplier = validate_int(data.get("multiplier", 1))
 
         if not item_id:
             return jsonify({"success": False, "message": "Missing item ID"}), 400
@@ -363,29 +364,35 @@ def place_order():
 
         # ADD THE REORDERED QUANTITY TO CURRENT STOCK
         reorder_qty = validate_int(item.get("reorderQty", 0))
-        current_stock = validate_int(item.get("currentStock", 0)) + reorder_qty
+        current_stock = validate_int(item.get("currentStock", 0))
         cost_per_unit = validate_float(item.get("costPerUnit", 0))
 
-        new_stock = current_stock + reorder_qty
-        total_cost = cost_per_unit * reorder_qty
+        final_qty = reorder_qty * multiplier
+        new_stock = current_stock + final_qty
+        total_cost = cost_per_unit * final_qty
 
         Inventory_Entries.update_one(
             {"_id": ObjectId(item_id)},
             {"$set": {
                 "currentStock": new_stock,
-                "totalValue": new_stock * cost_per_unit  # keep consistency
+                "totalValue": new_stock * cost_per_unit
             }}
         )
 
         # ADD NOTIFICATION
         add_notification(
             "Order Placed",
-            f"{reorder_qty} units of {item['itemName']} ordered "
+            f"{final_qty} units of {item['itemName']} ordered "
             f"at ${cost_per_unit:.2f}/unit. Total Cost: ${total_cost:.2f}",
             "success"
         )
 
-        return jsonify({"success": True, "newStock": new_stock})
+        return jsonify({
+            "success": True,
+            "newStock": new_stock,
+            "orderedQty": final_qty,
+            "totalCost": total_cost
+        })
     
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
@@ -765,8 +772,7 @@ def bom():
         if qtyPerUnit <= 0:
             return jsonify({"success": False, "message": "Quantity per unit must be positive."})
 
-        uom = request.form.get("uom")
-        supplier = request.form.get("supplier")
+        uom = inventory_item.get("uom", "")
 
         #put into mongoDB
         BOM_Entries.insert_one({
@@ -777,7 +783,6 @@ def bom():
             "itemName": itemName,
             "qtyPerUnit": qtyPerUnit,
             "uom": uom,
-            "supplier": supplier,
             "leadTime": 0,
             "costPerUnit": 0 # TEMPORARY
         })
@@ -795,7 +800,7 @@ def bom():
 def export_csv():
     selected_columns = [
         "PRODUCT CODE", "PRODUCT NAME", "BOM LEVEL", "ITEM CODE", 
-        "ITEM NAME", "QTY PER UNIT", "UOM", "SUPPLIER", "LEAD TIME", "COST/UNIT"
+        "ITEM NAME", "QTY PER UNIT", "UOM", "LEAD TIME", "COST/UNIT"
     ]
 
     column_map = {
@@ -806,7 +811,6 @@ def export_csv():
         "ITEM NAME": "itemName",
         "QTY PER UNIT": "qtyPerUnit",
         "UOM": "uom",
-        "SUPPLIER": "supplier",
         "LEAD TIME": "leadTime",
         "COST/UNIT": "costPerUnit"
     }
@@ -868,7 +872,6 @@ def import_csv():
             "ITEM NAME": "itemName",
             "QTY PER UNIT": "qtyPerUnit",
             "UOM": "uom",
-            "SUPPLIER": "supplier",
             "LEAD TIME": "leadTime",
             "COST/UNIT": "costPerUnit"
         }
@@ -900,7 +903,6 @@ def import_csv():
                 "itemName": itemName,
                 "qtyPerUnit": validate_float(row.get("QTY PER UNIT", 0)),
                 "uom": row.get("UOM", "").strip(),
-                "supplier": row.get("SUPPLIER", "").strip(),
                 "leadTime": validate_float(row.get("LEAD TIME", 0)),
                 "costPerUnit": validate_float(row.get("COST/UNIT", 0))
             }

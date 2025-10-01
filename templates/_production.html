@@ -1,29 +1,34 @@
-<div class="product-request">
+<div class="product-request" data-id="{{ item._id }}">
     <!-- Title -->
     <h3 class="product-title">Low Stock Alert: {{ item.itemName}}</h3>
 
-    <!-- Table -->
-    <table class="product-table">
-        <tr>
-            <td>Item Code: {{ item.itemCode }}</td>
-            <td>Supplier: {{ item.supplier }}</td>
-        </tr>
-        <tr>
-            <td>Current Stock: {{ item.currentStock|int or 0 }}</td>
-            <td>Cost Per Unit: {{ item.costPerUnit or 0 }}</td>
-        </tr>
-        <tr>
-            <td>Reorder QTY: {{ item.reorderQty or 0 }}</td>
-            <td>Total Cost: {{ (item.currentStock | float) * (item.costPerUnit | float) }}</td>
-        </tr>
-    </table>
+    <div class="product-details">
+        <table class="product-table">
+            <tr>
+                <td>Item Code: {{ item.itemCode }}</td>
+                <td>Supplier: {{ item.supplier }}</td>
+            </tr>
+            <tr>
+                <td>Current Stock: <span class="current-stock">{{ item.currentStock|int or 0 }}</span></td>
+                <td>Cost Per Unit: {{ item.costPerUnit or 0 }}</td>
+            </tr>
+            <tr>
+                <td>Reorder QTY: <span class="base-reorder">{{ item.reorderQty or 0 }}</span></td>
+                <td>Total Cost: {{ (item.currentStock | float) * (item.costPerUnit | float) }}</td>
+            </tr>
+        </table>
+
+        <div class="summary-box">
+            <p><strong>Reorder Level:</strong> <span class="reorder-level">{{ item.reorderLevel or 0 }}</span></p>
+            <p><strong>New Stock:</strong> <span class="new-stock">{{ item.currentStock|int or 0 }}</span></p>
+            <p><strong>Reorder QTY:</strong> <span class="summary-reorder">{{ item.reorderQty or 0 }}</span></p>
+        </div>
+    </div>
 
     <!-- Actions at bottom right -->
     <div class="product-actions">
-        <form action="{{ url_for('place_order') }}" method="POST">
             <input type="hidden" name="itemCode" value="{{ item.itemCode }}">
-            <button type="submit" class="place-order-btn">Place Order</button>
-        </form>
+            <input type="number" name="orderMultiplier" value="1" min="1" max="10" class="order-input">
+            <button type="button" class="order-btn">Place Order</button>
     </div>
-
 </div>
