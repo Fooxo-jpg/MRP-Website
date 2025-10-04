@@ -7,20 +7,24 @@ import time
 import json
 import io
 
-app = Flask(__name__)
-app.secret_key = "arandomasssecretkeydapatto"
+
+app = Flask(__name__) # INITIALIZES FLASK APPLICATION INSTANCE  
+app.secret_key = "arandomasssecretkeydapatto" # SESSION MANAGEMENT
 
 UPLOADER_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOADER_FOLDER
 
+#DATABASE CONNECTION
 client = MongoClient("mongodb+srv://Fooxo:2025174371@mrp-database.qopzsma.mongodb.net/")
 db = client.MRP_Database
 
+#COLLECTION REFERENCE
 BOM_Entries = db.bom_entry
 Inventory_Entries = db.inventory
 productCount = db.product
 notifications = db.notifications
 purchasedOrders = db.purchasedOrders
+Users = db.Users
 
 def add_notification(title, message, type="info"):
     notifications.insert_one({
@@ -325,11 +329,62 @@ def Dashboard():
         total_units_produced=total_units_produced
     )
 
+# ADMIN MANAGEMENT
 @app.route('/admin')
 def admin():
-    if session.get('role') != 'admin':
-        return redirect(url_for('signin'))
-    return render_template('admin.html')
+    if 'user' not in session or session.get('role') != 'admin':
+        return redirect(url_for('Dashboard'))
+
+    users = list(Users.find({}, {"_id": 1, "username": 1, "email": 1, "contact": 1, "password": 1}))
+    return render_template("Admin.html", users=users)
+
+# GET USERS
+@app.route('/get-users')
+def get_users():
+    if 'user' not in session or session.get('role') != 'admin':
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    
+    users = list(Users.find({}, {"_id": 1, "username": 1, "email": 1, "contact": 1, "password": 1}))
+    for u in users:
+        u["_id"] = str(u["_id"])  # Convert ObjectId to string for JSON
+    return jsonify(users)
+
+@app.route('/create-user', methods=["POST"])
+def create_user():
+    if 'user' not in session or session.get('role') != 'admin':
+        return jsonify({"success": False, "message": "Unauthorized"}), 401
+    
+    data = request.get_json()
+    username = data.get("username")
+    email = data.get("email")
+    contact = data.get("contact")
+    password = data.get("password")
+
+    if not username or not email or not password:
+        return jsonify({"success": False, "message": "Missing fields"}), 400
+
+    Users.insert_one({
+        "username": username,
+        "email": email,
+        "contact": contact,
+        "password": password
+    })
+
+    add_notification("New User Created", f"{username} was added", "success")
+    return jsonify({"success": True})
+
+@app.route('/delete-user', methods=['POST'])
+def delete_user():
+    data = request.get_json()
+    user_id = data.get("_id")
+    if not user_id:
+        return jsonify({"success": False, "message": "Missing user id"})
+
+    try:
+        Users.delete_one({"_id": ObjectId(user_id)})
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)})
 
 # PRODUCTION
 @app.route('/Production')
